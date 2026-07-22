@@ -44,6 +44,7 @@ export interface AvExtras {
   lightGot: number
   lightTotal: number
   banner: boolean
+  started: boolean
 }
 
 export interface AvSerialize {
@@ -97,6 +98,7 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
   private vy = 0
   private mode: 'ground' | 'air' = 'ground'
   private carving = false
+  private started = false
   private wallX = 0
   private wallSpeed = 3
   private pointer: PointerState | null = null
@@ -135,6 +137,7 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
     if (this.state !== 'play') return
     this.lastInputMs = this.engine.timeMs
     this.dismissGhost()
+    this.started = true
     const zone = s.y > this.engine.cssH * 0.75 ? 'hop' : 'carve'
     this.pointer = { startS: s, startMs: this.engine.timeMs, zone }
     if (this.carveInput === 'hold' && zone === 'carve') {
@@ -179,6 +182,10 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
     if (!ridge) return
 
     const dt = dtMs / 1000
+    if (!this.started) {
+      this.updateCamera(dt)
+      return
+    }
     const oldX = this.x
 
     // canonical inputs for ghost replay are handled in simulateGhost; here use player state
@@ -270,6 +277,7 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
       lightGot: this.lightGot(),
       lightTotal: this.lightTotal(),
       banner: this.engine.timeMs - this.bannerT0 < 2500,
+      started: this.started,
     }
   }
 

@@ -126,8 +126,13 @@ export default function Boss() {
 
   /* pause while modals are open */
   useEffect(() => {
-    sessionRef.current?.setPaused(pauseOpen || !!victory || introOpen)
+    sessionRef.current?.setPaused(pauseOpen || !!victory)
   }, [pauseOpen, victory, introOpen])
+
+  // dismiss intro once the run actually starts (first carve input)
+  useEffect(() => {
+    if (introOpen && ui?.started) setIntroOpen(false)
+  }, [ui, introOpen])
 
   /* victory → write rewards, then results */
   useEffect(() => {
@@ -235,8 +240,7 @@ export default function Boss() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-night-0/85 px-6 text-center backdrop-blur-sm"
-            onPointerDown={() => setIntroOpen(false)}
+            className="pointer-events-none absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-night-0/85 px-6 text-center backdrop-blur-sm"
           >
             <h2
               className="font-display text-display-xl text-coral"
@@ -247,7 +251,7 @@ export default function Boss() {
             <p className="max-w-[280px] text-body font-semibold text-mid">
               Outrun the white wall. Three ridges. No fail screens — just soft rewinds.
             </p>
-            <p className="text-caption font-extrabold uppercase text-low">Tap anywhere to start</p>
+            <p className="text-caption font-extrabold uppercase text-low">Hold top of screen to start</p>
           </motion.div>
         )}
       </AnimatePresence>
