@@ -92,7 +92,7 @@ decimals are exact C0 joins against irrational sine values — do not round.
   approach speed at any goal ≤ 8 u/s required.
 - Portals: grounded exits only (`y_out = f(x_b)`); height change across a
   portal `|Δh| ≤ 4` (arrival speed 12 u/s always suffices; backstop 18).
-- Terrain within `y ∈ [−6, +14]`; segment count ≤ 4 per level; level length
+- Terrain within `y ∈ [−6, +14]`; segment count ≤ 5 per level; level length
   34–64u.
 
 ### Zone 1 — First Descent (slope sign; carve/coast/hop)

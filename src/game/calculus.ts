@@ -13,8 +13,8 @@ export const CARVE_ACCEL = 4 // carve bonus u/s²
 export const HOP_IMPULSE = 5.5 // u/s along curve normal
 export const DRAG_CD = 0.015 // quadratic drag
 export const V_MAX = 18 // hard backstop u/s (CCD sanity)
-export const SHARD_TOL = 0.25 // pickup radius (grounded shards)
-export const AIR_SHARD_TOL = 0.6 // pickup radius (air shards)
+export const SHARD_TOL = 0.75 // pickup radius (grounded shards; shards float +0.5)
+export const AIR_SHARD_TOL = 0.9 // pickup radius (air shards)
 export const PHYS_HZ = 120
 export const PHYS_DT = 1 / PHYS_HZ
 
