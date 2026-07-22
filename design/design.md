@@ -76,57 +76,66 @@ boss 150 gears / 200 XP.
 
 ## 4. Level tables
 
-Star criteria (all levels, no timers): 1★ finish; 2★ finish with ≥ 70% of the
-level's light; 3★ finish with 100% light AND zero full-stops (flow). Harness
-proves 3★ achievable per level with the canonical controller (§7).
+Star criteria: §3 (1★ finish; 2★ ≥ 70% light; 3★ 100% light — no timers,
+no flow gates). Light: N shards, each at `(x_i, f(x_i)+0.5)` unless
+`air y_i` given (coast grabs). Coach ≤ 6 words every level (harness lints).
+Terrain notation: `kind(params) on [x0,x1]` per §5.1; `gap [a,b]` marks a
+coast window (flight, explicitly NOT a C0 join). Coefficients with > 4
+decimals are exact C0 joins against irrational sine values — do not round.
 
-Terrain notation: segments left→right as `kind(params) on [x0,x1]`.
-Library (§5.1): `ramp(m,c)`, `poly2(a,b,c)`, `sine(A,ω,φ,y0)`, `exp(A,k,y0)`.
-Heights in world units (1 u ≈ rider height); x increases rightward.
-Light: N shards, each at `(x_i, f(x_i)+0.5)` unless `air y_i` given (coast grabs).
-Coach ≤ 6 words every level (harness lints).
+**Authoring constraints (harness-enforced):**
+- Every level ships a `canonicalLine`: `{ goalX, coast: [x0,x1][], hops: x[] }`
+  — the witness input script the harness simulates (§7). goalX = finish gate.
+- Difficulty knobs escalate monotonically per zone: gap width ≤ 6u (Z1),
+  ≤ 7u (Z2), ≤ 8u (Z3+); air-shard altitude ≤ 3u above the coast apex;
+  Z1–Z2 shards strictly on the carve line; Z3+ ≤ 40% of shards off-line;
+  approach speed at any goal ≤ 8 u/s required.
+- Portals: grounded exits only (`y_out = f(x_b)`); height change across a
+  portal `|Δh| ≤ 4` (arrival speed 12 u/s always suffices; backstop 18).
+- Terrain within `y ∈ [−6, +14]`; segment count ≤ 4 per level; level length
+  34–64u.
 
 ### Zone 1 — First Descent (slope sign; carve/coast/hop)
 
 | id | name | terrain | light | coach |
 |---|---|---|---|---|
 | 1-1 | First Push | ramp(−0.15,6) on [0,30]; ramp(0,1.5) on [30,40] | 4 | "Hold to carve." |
-| 1-2 | Let Go | ramp(−0.25,7) on [0,20]; ramp(0.15,0) on [26,46] (gap 20–26) | 5 | "Release to fly." |
+| 1-2 | Let Go | ramp(−0.25,7) on [0,20]; gap [20,26]; ramp(0.15,0) on [26,46] | 5 | "Release to fly." |
 | 1-3 | Uphill Cost | ramp(−0.2,8) on [0,20]; ramp(0.1,2) on [20,40] | 5 | "Uphill eats speed." |
-| 1-4 | Little Hop | ramp(−0.15,6) on [0,18]; ramp(0,3.3) on [18,26]; ramp(−0.1,3.8) on [26,44] | 6, 2 air | "Tap to hop." |
-| 1-5 | Two Hills | sine(1.5,0.35,0,4) on [0,36]; ramp(0,4) on [36,44] | 6 | "Read the roll." |
-| 1-6 | Flat Means Flat | ramp(0,5) on [0,10]; ramp(−0.2,7) on [10,30]; ramp(0,3) on [30,42] | 6 | "Flat keeps speed." |
-| 1-7 | Long Flight | ramp(−0.3,9) on [0,18]; ramp(0.2,−1.4) on [26,46] | 7, 3 air | "Steep launch, far flight." |
-| 1-8 | First Gauntlet | sine(1,0.3,0,5) on [0,22]; ramp(−0.2,9.4) on [22,34]; ramp(0.1,2.6) on [34,48] | 8 | "Carve, coast, carve." |
-| 1-9 | The Big Hill | finale: ramp(−0.12,8) on [0,25]; sine(2,0.25,0,3) on [25,55]; ramp(0,3) on [55,64] | 10 | "One big read." |
+| 1-4 | Little Hop | ramp(−0.15,6) on [0,18]; ramp(0,3.3) on [18,26]; ramp(−0.1,5.9) on [26,44] | 6, 2 air | "Tap low to hop." |
+| 1-5 | Two Hills | sine(1.5,0.35,0,4) on [0,36]; ramp(0,4.0504345708) on [36,44] | 6 | "Read the steepness." |
+| 1-6 | Flat Means Flat | ramp(0,5) on [0,10]; ramp(−0.2,7) on [10,30]; ramp(0,1) on [30,42] | 6 | "Flat keeps speed." |
+| 1-7 | Long Flight | ramp(−0.3,9) on [0,18]; gap [18,26]; ramp(0.2,−1.4) on [26,46] | 7, 3 air | "Steep launch, far flight." |
+| 1-8 | First Gauntlet | sine(1,0.3,0,5) on [0,22]; ramp(−0.2,9.7115413635) on [22,34]; ramp(0.1,−0.4884586365) on [34,48] | 8 | "Carve, coast, carve." |
+| 1-9 | The Big Hill | finale: ramp(−0.12,8) on [0,25]; sine(2,0.25,0,5.0663584331) on [25,55]; ramp(0,6.9183233187) on [55,64] | 10 | "One big read." |
 
-### Zone 2 — Steep Reading (derivative as speedometer)
+### Zone 2 — Steep Reading (derivative steers your speed)
 
 | id | name | terrain | light | coach |
 |---|---|---|---|---|
-| 2-1 | The Number | ramp(−0.1,6) on [0,15]; ramp(−0.3,9) on [15,25]; ramp(−0.6,16.5) on [25,32]; ramp(0,−2.7) on [32,42] | 6 | "Steeper number, more go." |
-| 2-2 | Sign Language | ramp(0.3,0) on [0,12]; ramp(−0.3,7.2) on [12,30]; ramp(0,2.7) on [30,40] | 6 | "Minus goes down." |
+| 2-1 | The Number | ramp(−0.1,6) on [0,15]; ramp(−0.3,9) on [15,25]; ramp(−0.6,16.5) on [25,32]; ramp(0,−2.7) on [32,42] | 6 | "Steeper down, more go." |
+| 2-2 | Sign Language | ramp(0.3,0) on [0,12]; ramp(−0.3,7.2) on [12,30]; ramp(0,−1.8) on [30,40] | 6 | "Minus goes down." |
 | 2-3 | Gentle vs Wild | ramp(−0.05,5) on [0,20]; ramp(−0.5,14) on [20,30]; ramp(0,−1) on [30,42] | 7 | "Same drop, different hill." |
-| 2-4 | Speed Limit | sine(2,0.4,0,5) on [0,32]; ramp(0,5) on [32,42] | 7 | "Fast where it's steep." |
-| 2-5 | The Speedometer | poly2(−0.02,−0.1,7) on [0,30]; ramp(0,1) on [30,42] | 8 | "Watch the number change." |
-| 2-6 | Switchbacks | ramp(−0.4,8) on [0,10]; ramp(0.4,0) on [10,20]; ramp(−0.4,12) on [20,30]; ramp(0.3,−4) on [30,40]; ramp(0,4.4) on [40,46] | 8 | "Flip signs, keep flow." |
-| 2-7 | Curvy Steep | sine(2.5,0.5,0,6) on [0,26]; ramp(−0.2,8.4) on [26,40] | 8, 2 air | "Steep moves on curves." |
-| 2-8 | Reading Gauntlet | poly2(0.01,−0.5,9) on [0,25]; sine(1.5,0.4,0,2.75) on [25,45] | 9 | "Number up, speed up." |
-| 2-9 | Steepest Descent | finale: ramp(−0.08,6) on [0,12]; poly2(−0.015,0,6.96) on [12,40]; ramp(−0.6,24.96) on [40,48]; ramp(0,−3.84) on [48,58] | 10 | "Steepest wins." |
+| 2-4 | Speed Limit | sine(2,0.4,0,5) on [0,32]; ramp(0,5.4630196502) on [32,42] | 7 | "Push changes where steep." |
+| 2-5 | The SlopeChip | poly2(−0.01,−0.05,4.5) on [0,30]; ramp(0,−6) on [30,42] | 8 | "Watch the number change." |
+| 2-6 | Switchbacks | ramp(−0.4,8) on [0,10]; ramp(0.4,0) on [10,20]; ramp(−0.4,16) on [20,30]; ramp(0.3,−5) on [30,40]; ramp(0,7) on [40,46] | 8 | "Flip signs, keep flow." |
+| 2-7 | Curvy Steep | sine(2.5,0.5,0,6) on [0,26]; ramp(−0.2,12.2504175921) on [26,40] | 8, 2 air | "Steep moves on curves." |
+| 2-8 | Reading Gauntlet | poly2(0.01,−0.5,9) on [0,25]; sine(1.5,0.4,0,3.5660316663) on [25,45] | 9 | "Number shows steepness." |
+| 2-9 | Steepest Descent | finale: ramp(−0.08,8) on [0,12]; poly2(−0.005,0,7.76) on [12,40]; ramp(−0.6,23.76) on [40,48]; ramp(0,−5.04) on [48,58] | 10 | "Steepest wins." |
 
 ### Zone 3 — Apex Ridge (maxima/minima; launch windows)
 
 | id | name | terrain | light | coach |
 |---|---|---|---|---|
-| 3-1 | The Flat Top | poly2(−0.04,1.6,−9) on [0,20]; ramp(−0.2,8.6) on [20,38] | 6 | "Flat top, big launch." |
-| 3-2 | Valley Floor | poly2(0.04,−1.6,18) on [0,20]; ramp(0.2,−1.4) on [20,38] | 6 | "Bottoms slingshot." |
-| 3-3 | Top Then Drop | sine(2,0.3,0,5) on [0,21]; ramp(−0.35,12.35) on [21,40] | 7, 3 air | "Crest, then fly." |
-| 3-4 | Double Dip | sine(1.5,0.5,0,4) on [0,25]; ramp(0,4) on [25,34] | 7 | "Two bottoms, two boosts." |
-| 3-5 | Apex Slow-Mo | poly2(−0.05,2,−15) on [0,20]; ramp(−0.25,7.2) on [20,38] | 8, 3 air | "Float at the top." |
-| 3-6 | Land the Downside | ramp(−0.3,9) on [0,14]; sine(1.8,0.35,0,4.8) on [22,44] | 8 | "Land going down." |
-| 3-7 | Uphill Landing | ramp(−0.35,10) on [0,14]; ramp(0.15,−0.1) on [22,40] | 8 | "Soft landings lose less." |
-| 3-8 | Ridge Gauntlet | poly2(−0.03,1.2,−6) on [0,20]; sine(1.2,0.4,0,3) on [20,42] | 9, 2 air | "Top, drop, roll." |
-| 3-9 | The Great Apex | finale: poly2(−0.02,1.6,−27) on [0,40]; ramp(−0.4,17) on [40,55]; ramp(0,−5) on [55,64] | 10, 4 air | "One perfect crest." |
+| 3-1 | The Flat Top | poly2(−0.03,1.2,−5) on [0,20]; ramp(−0.2,11) on [20,38] | 6 | "Flat top, big launch." |
+| 3-2 | Valley Floor | poly2(0.04,−1.6,14) on [0,20]; ramp(0.2,−6) on [20,38] | 6 | "Bottoms slingshot." |
+| 3-3 | Top Then Drop | sine(2,0.3,0,5) on [0,21]; ramp(−0.35,12.383627801) on [21,40] | 7, 3 air | "Crest, then fly." |
+| 3-4 | Double Dip | sine(1.5,0.5,0,4) on [0,25]; ramp(0,3.900517154) on [25,34] | 7 | "Two bottoms, two boosts." |
+| 3-5 | Apex Slow-Mo | poly2(−0.025,1,−5) on [0,20]; ramp(−0.25,10) on [20,38] | 8, 3 air | "Float at the top." |
+| 3-6 | Land the Downside | ramp(−0.3,9) on [0,14]; gap [14,22]; sine(1.8,0.35,0,4.8) on [22,44] | 8 | "Land going down." |
+| 3-7 | Uphill Landing | ramp(−0.35,10) on [0,14]; gap [14,22]; ramp(0.15,−0.1) on [22,40] | 8 | "Soft landings lose less." |
+| 3-8 | Ridge Gauntlet | poly2(−0.03,1.2,−6) on [0,20]; sine(1.2,0.4,0,4.8127701041) on [20,42] | 9, 2 air | "Top, drop, roll." |
+| 3-9 | The Great Apex | finale: poly2(−0.005,0.4,0) on [0,40]; ramp(−0.4,24) on [40,55]; ramp(0,2) on [55,64] | 10, 4 air | "One perfect crest." |
 
 ### Zone 4 — Lightfields (accumulation / area)
 
@@ -135,46 +144,48 @@ Coach ≤ 6 words every level (harness lints).
 | 4-1 | Gather Light | ramp(−0.15,6) on [0,30]; ramp(0,1.5) on [30,40] | 8 | "Light fills the bar." |
 | 4-2 | Tall Hill, Big Bar | ramp(−0.15,9) on [0,30]; ramp(0,4.5) on [30,40] | 8 | "High hills hold more." |
 | 4-3 | Fill as You Go | sine(1,0.25,0,5) on [0,40] | 10 | "Every bit counts." |
-| 4-4 | Air Light | ramp(−0.3,9) on [0,16]; ramp(0.2,−1.2) on [24,44] | 8, 4 air | "Flying finds more." |
-| 4-5 | The Wide Valley | poly2(0.02,−0.8,12) on [0,20]; ramp(0.1,−2) on [20,40] | 10 | "Wide floor, wide bar." |
-| 4-6 | Don't Leave Any | sine(1.5,0.4,0,5) on [0,32]; ramp(−0.2,11.4) on [32,44] | 12 | "Clean the curve." |
+| 4-4 | Air Light | ramp(−0.3,9) on [0,16]; gap [16,24]; ramp(0.2,−1.2) on [24,44] | 8, 4 air | "Flying finds more." |
+| 4-5 | The Wide Valley | poly2(0.02,−0.8,12) on [0,20]; ramp(0.1,2) on [20,40] | 10 | "Wide floor, wide bar." |
+| 4-6 | Don't Leave Any | sine(1.5,0.4,0,5) on [0,32]; ramp(−0.2,11.7472647377) on [32,44] | 12 | "Clean the curve." |
 | 4-7 | Light Ladder | ramp(−0.2,8) on [0,20]; ramp(0,4) on [20,28]; ramp(−0.2,9.6) on [28,40] | 12, 3 air | "Steps of light." |
-| 4-8 | Field Gauntlet | poly2(−0.01,0.2,5) on [0,25]; sine(1,0.35,0,7.5) on [25,45] | 14 | "Full bar, full flow." |
-| 4-9 | The Motherlode | finale: sine(2,0.2,0,6) on [0,50]; ramp(0,6) on [50,60] | 16 | "Fill it all." |
+| 4-8 | Field Gauntlet | poly2(−0.01,0.2,5) on [0,25]; sine(1,0.35,0,3.1252760462) on [25,45] | 14 | "Full bar, full flow." |
+| 4-9 | The Motherlode | finale: sine(2,0.2,0,6) on [0,50]; ramp(0,4.9119577782) on [50,60] | 16 | "Fill it all." |
 
-### Zone 5 — Portal Peaks (FTC: area ↔ speed)
+### Zone 5 — Portal Peaks (exact trades; ∫f′ = Δh)
 
-Portals: paired gates `P(a→b)`. Transit conserves `E = v²/2 + g·y` exactly
-(§5.6). Terrain + portal pairs per level:
+Portals: paired gates `P(a→b)`, grounded exits (`y_out = f(x_b)`),
+`|Δh| ≤ 4` (§4 rules). Transit conserves `E = v²/2 + g·y` exactly (§5.6).
+`gap` ranges under portals are bridged by the gate, never ridden.
 
 | id | name | terrain + portals | light | coach |
 |---|---|---|---|---|
-| 5-1 | The Blue Door | ramp(−0.2,8) on [0,20]; ramp(0.3,−2) on [28,44]; P(20→28) | 6 | "Doors keep your push." |
-| 5-2 | Up Door, Out Fast | ramp(−0.15,6) on [0,18]; ramp(0.4,−3.2) on [30,42]; P(18→30, exit y=+3) | 6 | "Higher door, slower out." |
-| 5-3 | Down Door Dash | ramp(−0.1,7) on [0,16]; ramp(−0.4,13.8) on [30,44]; P(16→30, exit y=−2) | 7 | "Lower door, faster out." |
-| 5-4 | Two Doors | sine(1.5,0.3,0,5) on [0,20]; ramp(−0.3,11) on [32,46]; P₁(20→26), P₂(26→32) | 8 | "Chain the doors." |
-| 5-5 | Bank the Hill | ramp(−0.25,9) on [0,20]; ramp(0.5,−7) on [30,42]; P(20→30) | 8 | "Spend height, keep speed." |
-| 5-6 | Exact Trade | poly2(−0.02,0.8,−2) on [0,20]; ramp(−0.2,10) on [32,46]; P(20→32, exit y=−1.5) | 9 | "The trade is exact." |
-| 5-7 | Door Ladder | ramp(−0.2,10) on [0,14]; ramp(−0.2,12.8) on [22,32]; ramp(−0.2,15.6) on [40,50]; P₁(14→22), P₂(32→40) | 9 | "Climb the ladder down." |
-| 5-8 | Portal Gauntlet | sine(1,0.4,0,6) on [0,16]; poly2(0.02,−1.2,18) on [26,40]; ramp(0,0) on [40,48]; P(16→26) | 10 | "One door, full read." |
-| 5-9 | The Two-Way Door | finale: ramp(−0.3,12) on [0,18]; sine(1.5,0.3,0,4.6) on [28,50]; P(18→28, exit y=−1); hidden return P(50→0) for replay | 12, 4 air | "Master the trade." |
+| 5-1 | The Blue Door | ramp(−0.2,8) on [0,20]; gap [20,28]; ramp(0.3,−2) on [28,44]; P(20→28) | 6 | "Doors trade height." |
+| 5-2 | Up Door, Out Slow | ramp(−0.15,6) on [0,18]; gap [18,30]; ramp(0.4,−4.7) on [30,42]; P(18→30) | 6 | "Higher door, slower out." |
+| 5-3 | Down Door Dash | ramp(−0.1,7) on [0,16]; gap [16,30]; ramp(−0.4,13.8) on [30,44]; P(16→30) | 7 | "Lower door, faster out." |
+| 5-4 | Two Doors | sine(1.5,0.3,0,5) on [0,20]; gap [20,24]; ramp(0,3.2) on [24,28]; gap [28,32]; ramp(−0.3,11) on [32,46]; P₁(20→24), P₂(28→32) | 8 | "Chain the doors." |
+| 5-5 | Bank the Hill | ramp(−0.25,9) on [0,20]; gap [20,30]; ramp(0.5,−7) on [30,42]; P(20→30) | 8 | "Spend height, keep speed." |
+| 5-6 | Exact Trade | poly2(−0.02,0.8,−2) on [0,20]; gap [20,32]; ramp(−0.2,10) on [32,46]; P(20→32) | 9 | "The trade is exact." |
+| 5-7 | Door Ladder | ramp(−0.2,10) on [0,14]; gap [14,22]; ramp(−0.2,12.8) on [22,32]; gap [32,40]; ramp(−0.2,15.6) on [40,50]; P₁(14→22), P₂(32→40) | 9 | "Climb the ladder down." |
+| 5-8 | Portal Gauntlet | sine(1,0.4,0,6) on [0,16]; gap [16,26]; poly2(0.02,−1.2,20) on [26,40]; ramp(0,4) on [40,48]; P(16→26) | 10 | "Read before the door." |
+| 5-9 | The Two-Way Door | finale: ramp(−0.3,2) on [0,18]; gap [18,28]; sine(1.5,0.3,0,−2.3) on [28,50]; P(18→28) | 12, 4 air | "Master the trade." |
 
-### Zone 6 — Wind & Spring (ODEs as editable rules)
+### Zone 6 — Wind & Spring (motion rules you write)
 
-Rule editor: pre-run sheet with stepper controls (± buttons, 44px) for the
-level's coefficient(s) within the given range; the run uses the chosen rule.
-Wind plain: `ẍ = +k` (k ∈ range). Spring valley: `ẍ = −k(x − x₀)`.
+Rule editor: OPTIONAL pre-run sheet (defaults = a solvable rule) + pencil chip
+on the HUD for mid-run changes (pauses the run). Steppers (± buttons, 44px,
+0.1 steps) set coefficients within the level's range. Wind: `a += k`.
+Spring: `a += −k·(x − x₀)`. Rules act on the RIDER's motion; terrain is fixed.
 
 | id | name | rule + terrain | light | coach |
 |---|---|---|---|---|
 | 6-1 | The Wind Rule | wind k ∈ [0.5,3], solvable k=1; ramp(−0.1,6) on [0,40] | 6 | "Write the wind." |
 | 6-2 | Stronger Wind | wind k ∈ [0.5,3], solvable k=2.5; ramp(0.15,0) on [0,36] | 6 | "More k, more push." |
-| 6-3 | Wind Gap | wind k ∈ [1,4], solvable k=3; ramp(−0.2,8) on [0,16]; ramp(0.2,−1.2) on [24,44] | 7, 2 air | "Wind carries you." |
+| 6-3 | Wind Gap | wind k ∈ [1,4], solvable k=3; ramp(−0.2,8) on [0,16]; gap [16,24]; ramp(0.2,−1.2) on [24,44] | 7, 2 air | "Wind carries you." |
 | 6-4 | The Spring Rule | spring k ∈ [0.2,1.5], x₀=20, solvable k=0.8; ramp(0,6) on [0,40] | 7 | "The rule pulls back." |
 | 6-5 | Soft vs Hard Spring | spring k ∈ [0.2,2], x₀=24, solvable k=1.2; sine(0.5,0.2,0,5) on [0,44] | 8 | "Hard pulls harder." |
 | 6-6 | Spring Launch | spring k ∈ [0.5,2.5], x₀=12, solvable k=2; ramp(0,4) on [0,12]; ramp(−0.3,7.6) on [12,32] | 8, 2 air | "Pull back, sling forward." |
-| 6-7 | Wind + Spring | wind k₁ ∈ [0,2] + spring k₂ ∈ [0.2,1.5], x₀=24, solvable (1,0.8); ramp(−0.1,7) on [0,44] | 9 | "Two rules, one hill." |
-| 6-8 | Rule Gauntlet | spring k ∈ [0.4,2], x₀=20, solvable k=1.5; sine(1,0.3,0,5) on [0,42] | 10 | "Tune the valley." |
+| 6-7 | Wind + Spring | wind k₁ ∈ [0,2] + spring k₂ ∈ [0.2,1.5], x₀=24, solvable (1,0.8); ramp(−0.1,7) on [0,44] | 9 | "Two rules, one ride." |
+| 6-8 | Rule Gauntlet | spring k ∈ [0.4,2], x₀=20, solvable k=1.5; sine(1,0.3,0,5) on [0,42] | 10 | "Tune the rule." |
 | 6-9 | The Perfect Rule | finale: wind k₁ ∈ [0.5,3] + spring k₂ ∈ [0.2,2], x₀=30, solvable (2,1); poly2(0.01,−0.3,8) on [0,30]; ramp(−0.2,14) on [30,55] | 12, 3 air | "Write the perfect rule." |
 
 ## 5. Canonical math & physics (the implementer contract)
