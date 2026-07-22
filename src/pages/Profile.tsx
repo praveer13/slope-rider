@@ -16,7 +16,7 @@ export default function Profile() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <TopBar title="Profile" />
+      <TopBar title="Profile" gears={gears} />
       <main className="flex flex-1 flex-col gap-4 px-4 pb-24 pt-6">
         <div className="rounded-2xl border border-line bg-night-2 p-6 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-2 border-gold shadow-glow-gold">

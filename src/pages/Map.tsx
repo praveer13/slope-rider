@@ -6,11 +6,12 @@ import { useGameStore, chapterOf } from '../store.ts'
 export default function Map() {
   const navigate = useNavigate()
   const progress = useGameStore((s) => s.levels)
+  const gears = useGameStore((s) => s.gears)
   const setCurrent = useGameStore((s) => s.setCurrentLevel)
 
   return (
     <div className="flex min-h-full flex-col">
-      <TopBar title="Map" />
+      <TopBar title="Map" gears={gears} />
       <main className="flex flex-1 flex-col gap-3 px-4 pb-24 pt-4">
         {levels.map((lvl) => {
           const p = progress[lvl.id]

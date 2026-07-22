@@ -16,10 +16,11 @@ export default function Home() {
   const level = selectPlayerLevel(xp)
   const into = selectXpIntoLevel(xp)
   const totalStars = useGameStore(selectTotalStars)
+  const gears = useGameStore((s) => s.gears)
 
   return (
     <div className="flex min-h-full flex-col">
-      <TopBar title="SLOPE RIDER" />
+      <TopBar title="__GAME_NAME__" gears={gears} />
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-8 pt-4 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -30,7 +31,7 @@ export default function Home() {
         </motion.div>
         <div>
           <h1 className="font-display text-4xl text-hi text-glow-amber">
-            SLOPE RIDER
+            __GAME_NAME__
           </h1>
           <p className="mt-2 text-body text-mid">
             Drag the spark to the gold pad.

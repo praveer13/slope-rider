@@ -108,6 +108,7 @@ class ArrowSession extends Session<LevelDef, { reached: boolean }> {
 }
 
 export default function Gameplay() {
+  const gears = useGameStore((s) => s.gears)
   const navigate = useNavigate()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sessionRef = useRef<ArrowSession | null>(null)
@@ -147,7 +148,7 @@ export default function Gameplay() {
 
   return (
     <div className="relative flex h-full flex-col">
-      <TopBar title={level.name} />
+      <TopBar title={level.name} gears={gears} />
       <div className="pointer-events-none absolute left-4 top-[calc(3.5rem+env(safe-area-inset-top))] z-10 flex gap-2">
         <Chip tone="cyan">{ui.equation}</Chip>
         <StarMeter stars={ui.reached ? 3 : 0} size={16} />
