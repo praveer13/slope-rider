@@ -5,6 +5,7 @@ import { Session } from '@gridverse/kit/session'
 import type { HintGesture, SessionEvents } from '@gridverse/kit/session'
 import { haptics, kitSettings } from '@gridverse/kit/lib'
 import {
+  AIR_SHARD_TOL,
   areaBetween,
   findLanding,
   HOP_IMPULSE,
@@ -14,6 +15,7 @@ import {
   segAt,
   segDf,
   segF,
+  SHARD_TOL,
   terrainF,
   verletAir,
   verletGround,
@@ -541,7 +543,7 @@ export class RideSession extends Session<SRLevel, RideExtras> {
     for (let i = 0; i < this.level.shards.length; i++) {
       if (this.shardsGot.has(i)) continue
       const shard = this.level.shards[i]!
-      const limit = shard.air ? 0.6 : 0.25
+      const limit = shard.air ? AIR_SHARD_TOL : SHARD_TOL
       if (dist({ x: this.x, y: this.y }, { x: shard.x, y: shard.y }) <= limit) {
         this.shardsGot.add(i)
         const frac = this.areaTotal > 0 ? this.area / this.areaTotal : 0
