@@ -1,5 +1,4 @@
 import { Home, Map, BookOpen, User } from 'lucide-react'
-import type { RouteObject } from 'react-router'
 import { AppShell } from '@gridverse/kit/shell'
 import HomePage from './pages/Home.tsx'
 import MapPage from './pages/Map.tsx'
@@ -9,22 +8,22 @@ import ResultsPage from './pages/Results.tsx'
 import ProfilePage from './pages/Profile.tsx'
 import SettingsPage from './pages/Settings.tsx'
 
-const routes: RouteObject[] = [
-  { path: '/', element: <HomePage /> },
-  { path: '/map', element: <MapPage /> },
-  { path: '/codex', element: <CodexPage /> },
+const routes = [
+  { path: '/', element: <HomePage />, navId: 'home' },
+  { path: '/map', element: <MapPage />, navId: 'map' },
+  { path: '/codex', element: <CodexPage />, navId: 'codex' },
   { path: '/play', element: <GameplayPage /> },
   { path: '/results', element: <ResultsPage /> },
-  { path: '/profile', element: <ProfilePage /> },
+  { path: '/profile', element: <ProfilePage />, navId: 'profile' },
   { path: '/settings', element: <SettingsPage /> },
-  { path: '*', element: <HomePage /> },
+  { path: '*', element: <HomePage />, navId: 'home' },
 ]
 
 const tabs = [
-  { to: '/', label: 'Home', icon: Home },
-  { to: '/map', label: 'Map', icon: Map },
-  { to: '/codex', label: 'Codex', icon: BookOpen },
-  { to: '/profile', label: 'Profile', icon: User },
+  { id: 'home', label: 'Home', icon: <Home className="h-5 w-5" /> },
+  { id: 'map', label: 'Map', icon: <Map className="h-5 w-5" /> },
+  { id: 'codex', label: 'Codex', icon: <BookOpen className="h-5 w-5" /> },
+  { id: 'profile', label: 'Profile', icon: <User className="h-5 w-5" /> },
 ]
 
 export default function App() {
