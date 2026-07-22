@@ -131,7 +131,7 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
 
   /* ---- subclass contract ---- */
 
-  onDown(w: Vec, s: Vec) {
+  onDown(_w: Vec, s: Vec) {
     if (this.state !== 'play') return
     this.lastInputMs = this.engine.timeMs
     this.dismissGhost()
@@ -146,7 +146,7 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
     /* drag is not part of the one-finger contract */
   }
 
-  onUp(w: Vec, s: Vec) {
+  onUp(_w: Vec, s: Vec) {
     if (!this.pointer) return
     const dur = this.engine.timeMs - this.pointer.startMs
     const d = Math.hypot(s.x - this.pointer.startS.x, s.y - this.pointer.startS.y)
@@ -494,18 +494,18 @@ export class AvalancheSession extends Session<BossDef, AvExtras> {
     }
   }
 
-  private updateWall(dt: number, ridge: BossRidge) {
+  private updateWall(_dt: number, ridge: BossRidge) {
     const spd = this.speed()
     const base = Math.max(3, spd - this.level.wallStartOffset)
     this.wallSpeed = base + this.ridgeIdx * this.level.wallGainPerRidge
-    this.wallX += this.wallSpeed * dt
+    this.wallX += this.wallSpeed * _dt
     // wall never passes rider without triggering caught; keep it clamped behind spawn for sanity
     const sx = spawnXOf(ridge)
     if (this.wallX > this.x + 2) this.wallX = this.x + 2
     if (this.wallX < sx - 20) this.wallX = sx - 20
   }
 
-  private updateCamera(dt: number) {
+  private updateCamera(_dt: number) {
     const ridge = this.level.ridges[this.ridgeIdx]
     if (!ridge) return
     const visibleW = this.engine.cssW / this.engine.cam.scale

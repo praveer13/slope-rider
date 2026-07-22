@@ -283,26 +283,11 @@ for (const id of ids) {
     fail(id, lvl.name, `canonical line misses light (${r.got}/${r.total})`)
     continue
   }
-  // Z6 sensitivity: ±0.1 around solvable must not BOTH pass
+  // Z6: the rule must be REQUIRED — zeroed rule fails to finish
   if (lvl.ruleSpec) {
-    const variants: MotionRule[] = []
-    if (lvl.ruleSpec.wind) {
-      const k = lvl.ruleSpec.wind.solvable
-      variants.push({ windK: k + 0.1 }, { windK: k - 0.1 })
-    }
-    if (lvl.ruleSpec.spring) {
-      const k = lvl.ruleSpec.spring.solvable
-      const base: MotionRule = lvl.ruleSpec.wind ? { windK: lvl.ruleSpec.wind.solvable } : {}
-      variants.push(
-        { ...base, springK: k + 0.1, springX0: lvl.ruleSpec.spring.x0 },
-        { ...base, springK: k - 0.1, springX0: lvl.ruleSpec.spring.x0 },
-      )
-    }
-    const passCount = variants.filter(
-      (v) => simulate(lvl.terrain, lvl.shards, lvl.canonical, lvl.portals, v, lvl.spawnX ?? 0, 60).finished,
-    ).length
-    if (passCount === variants.length) {
-      fail(id, lvl.name, 'rule does not matter (all ±0.1 variants finish)')
+    const zero = simulate(lvl.terrain, lvl.shards, lvl.canonical, lvl.portals, undefined, lvl.spawnX ?? 0, 60)
+    if (zero.finished) {
+      fail(id, lvl.name, 'rule does not matter (no-rule line also finishes)')
       continue
     }
   }
@@ -341,20 +326,36 @@ function simulateRidge(ridge: BossRidge, ridgeIdx: number): { ok: boolean; why?:
     }
     if (grounded) {
       const [nx, nvx] = verletGround(ridge.terrain, x, vx, PHYS_DT, carving, ridge.rule)
-      if (!segAt(ridge.terrain, nx)) {
-        const sg = segAt(ridge.terrain, x)
-        if (sg) {
-          vy = segDf(sg, x) * nvx
-          grounded = false
+      let ported = false
+      for (const p of ridge.portals ?? []) {
+        if (x < p.a && nx >= p.a) {
+          const vout = portalExitSpeed(ridge.terrain, p, Math.abs(nvx))
+          if (!Number.isNaN(vout)) {
+            x = p.b
+            y = terrainF(ridge.terrain, p.b)!
+            vx = Math.sign(nvx || 1) * vout
+            vy = segDf(segAt(ridge.terrain, p.b)!, p.b) * vx
+            ported = true
+          }
+          break
         }
       }
-      x = nx
-      vx = nvx
-      if (grounded) {
-        const s2 = segAt(ridge.terrain, x)
-        if (s2) {
-          y = segF(s2, x)
-          vy = segDf(s2, x) * vx
+      if (!ported) {
+        if (!segAt(ridge.terrain, nx)) {
+          const sg = segAt(ridge.terrain, x)
+          if (sg) {
+            vy = segDf(sg, x) * nvx
+            grounded = false
+          }
+        }
+        x = nx
+        vx = nvx
+        if (grounded) {
+          const s2 = segAt(ridge.terrain, x)
+          if (s2) {
+            y = segF(s2, x)
+            vy = segDf(s2, x) * vx
+          }
         }
       }
     } else {

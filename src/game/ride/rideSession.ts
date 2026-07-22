@@ -19,9 +19,7 @@ import {
   verletGround,
   type GhostFrame,
   type MotionRule,
-  type Portal,
   type Seg,
-  type Shard,
 } from '../calculus.js'
 import { solvableRule, type SRLevel, saveMidLevel } from '../levels.js'
 import {
@@ -468,7 +466,7 @@ export class RideSession extends Session<SRLevel, RideExtras> {
     const np = segDf(ns, this.x)
     this.vy = np * this.vx
 
-    this.checkPortals(s)
+    this.checkPortals()
   }
 
   private stepAirborne(dt: number): void {
@@ -506,7 +504,7 @@ export class RideSession extends Session<SRLevel, RideExtras> {
     haptics.tick()
   }
 
-  private checkPortals(prevSeg: Seg): void {
+  private checkPortals(): void {
     const terrain = this.level.terrain
     const portals = this.level.portals
     if (!portals) return
@@ -566,7 +564,7 @@ export class RideSession extends Session<SRLevel, RideExtras> {
     eng.cam.scale = reduce ? targetScale : lerp(eng.cam.scale, targetScale, 0.04)
   }
 
-  private updateSlowMo(dt: number): void {
+  private updateSlowMo(_dt: number): void {
     if (kitSettings().reduceMotion) {
       this.slowMoFactor = 0
       return

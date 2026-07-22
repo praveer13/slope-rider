@@ -12,30 +12,22 @@ import {
   chapterName,
 } from '../store.ts'
 import { loadResult, LEVELS, type ResultPayload } from '../game/levels.ts'
-import { cardById, cardsForLevel } from '@/lib/cards'
+import { cardById, CARDS, type CardMeta } from '@/lib/cards'
+import { ZONES } from '@/lib/content'
 import { haptics, sfx, cn } from '@gridverse/kit/lib'
 
 const pop = { type: 'spring', stiffness: 420, damping: 24 } as const
 const gentle = { type: 'spring', stiffness: 180, damping: 22 } as const
 
-const CH_TONE: Record<number, string> = {
+const CH_TONE = {
   1: 'mint',
   2: 'cyan',
   3: 'violet',
   4: 'amber',
   5: 'magenta',
   6: 'coral',
-}
-
-interface ConceptCard {
-  id: string
-  flavor: string
-  term: string
-  note: string
-  example: string
-  accent: string
-  img: string
-}
+} as const
+type Tone = (typeof CH_TONE)[keyof typeof CH_TONE]
 
 function CountUp({ to, duration = 0.7, delay = 0 }: { to: number; duration?: number; delay?: number }) {
   const [n, setN] = useState(0)
@@ -105,10 +97,11 @@ function Confetti({ fire }: { fire: boolean }) {
   if (!fire || reduceMotion) return null
   return <canvas ref={ref} className="pointer-events-none absolute inset-0 z-20 h-full w-full" aria-hidden />
 }
-
-function ConceptCardFlip({ card, delay = 0 }: { card: ConceptCard; delay?: number }) {
+function ConceptCardFlip({ card, delay = 0 }: { card: CardMeta; delay?: number }) {
   const [flipped, setFlipped] = useState(false)
   const [dealt, setDealt] = useState(false)
+  const accent = ZONES[card.zone - 1]?.accent ?? '#22D3EE'
+
   useEffect(() => {
     const t1 = window.setTimeout(() => setDealt(true), delay * 1000)
     return () => window.clearTimeout(t1)
@@ -127,7 +120,7 @@ function ConceptCardFlip({ card, delay = 0 }: { card: ConceptCard; delay?: numbe
           sfx.tick()
         }}
         role="button"
-        aria-label={`Concept card ${card.flavor}. Tap to flip.`}
+        aria-label={`Concept card ${card.front}. Tap to flip.`}
       >
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -137,32 +130,35 @@ function ConceptCardFlip({ card, delay = 0 }: { card: ConceptCard; delay?: numbe
         >
           <div
             className="absolute inset-0 overflow-hidden rounded-lg border-2 bg-night-2"
-            style={{ borderColor: card.accent, backfaceVisibility: 'hidden', boxShadow: `0 0 24px ${card.accent}44` }}
+            style={{ borderColor: accent, backfaceVisibility: 'hidden', boxShadow: `0 0 24px ${accent}44` }}
           >
-            <img src={card.img} alt={card.flavor} className="h-full w-full object-cover" draggable={false} />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-0/95 to-transparent px-2 pb-1.5 pt-6">
-              <p className="text-title font-extrabold text-hi">{card.flavor}</p>
-              <p className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: card.accent }}>
+            <div
+              className="absolute inset-0 flex flex-col justify-end p-3"
+              style={{ background: `linear-gradient(135deg, ${accent}33, #0B1628)` }}
+            >
+              <p className="relative text-[10px] font-extrabold uppercase tracking-widest" style={{ color: accent }}>
                 concept card
               </p>
+              <p className="text-title font-extrabold leading-tight text-hi">{card.front}</p>
+              <p className="text-[11px] font-bold text-mid">{card.term}</p>
             </div>
           </div>
           <div
             className="absolute inset-0 flex flex-col gap-1.5 rounded-lg border-2 bg-night-2 p-3"
             style={{
-              borderColor: card.accent,
+              borderColor: accent,
               backfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
-              boxShadow: `0 0 24px ${card.accent}44`,
+              boxShadow: `0 0 24px ${accent}44`,
             }}
           >
-            <p className="relative text-[10px] font-extrabold uppercase tracking-widest" style={{ color: card.accent }}>
+            <p className="relative text-[10px] font-extrabold uppercase tracking-widest" style={{ color: accent }}>
               nerd note
             </p>
             <p className="relative text-title font-extrabold text-hi">{card.term}</p>
             <p className="relative text-[13px] font-semibold leading-snug text-mid">{card.note}</p>
             <p className="relative mt-auto rounded-sm bg-night-3 px-2 py-1 font-mono text-[11px] font-bold text-cyan">
-              {card.example}
+              {card.foundLabel}
             </p>
           </div>
         </motion.div>
@@ -173,24 +169,30 @@ function ConceptCardFlip({ card, delay = 0 }: { card: ConceptCard; delay?: numbe
 }
 
 function CardsFan({ chapter }: { chapter: number }) {
-  const ids = cardsForLevel(chapter)
+  const cards = CARDS.filter((c) => c.zone === chapter)
   const owned = useGameStore((s) => s.cards)
+  const accent = ZONES[chapter - 1]?.accent ?? '#22D3EE'
   return (
     <div className="flex items-center justify-center">
-      {ids.map((id, i) => {
-        const card = cardById(id)
-        const has = owned.includes(id)
+      {cards.map((card, i) => {
+        const has = owned.includes(card.id)
         return (
           <motion.div
-            key={id}
+            key={card.id}
             initial={{ y: 40, opacity: 0, rotate: 0 }}
             animate={{ y: 0, opacity: 1, rotate: (i - 1) * 12 }}
             transition={{ ...pop, delay: 0.12 * i }}
             className={cn('h-[120px] w-[86px] overflow-hidden rounded-md border-2 bg-night-2', i > 0 && '-ml-5')}
-            style={{ borderColor: has ? card?.accent : '#223354', zIndex: i }}
+            style={{ borderColor: has ? accent : '#223354', zIndex: i }}
           >
-            {has && card ? (
-              <img src={card.img} alt={card.flavor} className="h-full w-full object-cover" draggable={false} />
+            {has ? (
+              <div
+                className="flex h-full w-full flex-col justify-end p-1.5"
+                style={{ background: `linear-gradient(135deg, ${accent}33, #0B1628)` }}
+              >
+                <p className="text-[9px] font-extrabold uppercase leading-tight tracking-tight text-hi">{card.front}</p>
+                <p className="text-[8px] font-bold text-low">{card.term}</p>
+              </div>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-night-3 text-2xl font-black text-low">?</div>
             )}
@@ -242,7 +244,7 @@ function ResultsBody({
   navigate: (to: string) => void
 }) {
   const level = LEVELS[payload.levelId]
-  const tone = CH_TONE[payload.chapter] ?? 'mint'
+  const tone = (CH_TONE[payload.chapter as keyof typeof CH_TONE] ?? 'mint') as Tone
   const tryAgain = !!payload.tryAgain
   const lvlBefore = selectPlayerLevel(payload.xpBefore)
   const lvlAfter = selectPlayerLevel(payload.xpAfter)
@@ -265,7 +267,7 @@ function ResultsBody({
       <div className="sr-only" aria-live="polite">
         {`${headline} Level ${payload.levelId} ${payload.levelName}. ${payload.stars} of 3 stars. ` +
           `${payload.xpEarned} XP and ${payload.gearsEarned} gears earned. ` +
-          (card ? `Concept card ${card.flavor} unlocked.` : '') +
+          (card ? `Concept card ${card.front} unlocked.` : '') +
           (payload.chapterComplete ? ' Chapter complete!' : '')}
       </div>
 

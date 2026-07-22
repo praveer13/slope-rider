@@ -1,5 +1,4 @@
 import type { Vec } from '@gridverse/kit/engine'
-import { dist } from '@gridverse/kit/engine'
 import type { Engine } from '@gridverse/kit/engine'
 import type { GhostFrame, Portal, Seg, Shard } from '../calculus.js'
 import { segF, terrainF } from '../calculus.js'

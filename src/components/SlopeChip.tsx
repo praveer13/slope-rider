@@ -11,14 +11,15 @@ interface SlopeChipProps {
   mathLabels?: boolean
 }
 
-const ZONE_TONE: Record<number, string> = {
+const ZONE_TONE = {
   1: 'mint',
   2: 'cyan',
   3: 'violet',
   4: 'amber',
   5: 'magenta',
   6: 'coral',
-}
+} as const
+type Tone = (typeof ZONE_TONE)[keyof typeof ZONE_TONE]
 
 export default function SlopeChip({
   speed,
@@ -29,7 +30,7 @@ export default function SlopeChip({
 }: SlopeChipProps) {
   const [open, setOpen] = useState(false)
   const card = cardById(levelId)
-  const tone = ZONE_TONE[zone] ?? 'cyan'
+  const tone = (ZONE_TONE[zone as keyof typeof ZONE_TONE] ?? 'cyan') as Tone
 
   return (
     <>
@@ -57,12 +58,10 @@ export default function SlopeChip({
       </button>
 
       {open && card && (
-        <BottomSheet onClose={() => setOpen(false)} title={card.flavor}>
+        <BottomSheet open={open} onClose={() => setOpen(false)} ariaLabel="Concept card">
           <div className="flex flex-col gap-3 px-1 pb-2">
+            <h2 className="text-h2 font-black text-hi">{card.front}</h2>
             <p className="text-body font-semibold text-mid">{card.note}</p>
-            <p className="rounded-sm bg-night-3 px-2 py-1 font-mono text-[12px] font-bold text-cyan">
-              {card.example}
-            </p>
             <Chip tone={tone}>Zone {zone}</Chip>
           </div>
         </BottomSheet>

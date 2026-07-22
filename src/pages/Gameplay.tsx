@@ -15,12 +15,6 @@ import AreaBar from '../components/AreaBar.tsx'
 
 bindKitSettings(() => useGameStore.getState().settings)
 
-declare global {
-  interface Window {
-    __pw?: RideSession
-  }
-}
-
 const pop = { type: 'spring', stiffness: 420, damping: 24 } as const
 
 const ZONE_ACCENT: Record<number, string> = {
@@ -32,18 +26,18 @@ const ZONE_ACCENT: Record<number, string> = {
   6: '#FF6B4A',
 }
 
-const ZONE_TONE: Record<number, string> = {
+const ZONE_TONE = {
   1: 'mint',
   2: 'cyan',
   3: 'violet',
   4: 'amber',
   5: 'magenta',
   6: 'coral',
-}
+} as const
+type Tone = (typeof ZONE_TONE)[keyof typeof ZONE_TONE]
 
 export default function Gameplay() {
   const [params] = useSearchParams()
-  const navigate = useNavigate()
   const wantResume = params.get('resume') === '1'
   const storeCurrent = useGameStore((s) => s.currentLevel)
   const levelId = params.get('level') ?? storeCurrent
@@ -171,8 +165,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
     navigate('/map')
   }
 
-  const playing = ui?.state === 'play'
-  const tone = ZONE_TONE[level.zone] ?? 'mint'
+  const tone = (ZONE_TONE[level.zone as keyof typeof ZONE_TONE] ?? 'mint') as Tone
   const starPreview = starsForLight(true, ui?.lightGot ?? 0, level.shards.length)
 
   return (
@@ -377,8 +370,9 @@ function RuleEditorSheet({
   }
 
   return (
-    <BottomSheet onClose={onClose} title="Motion rule">
+    <BottomSheet open onClose={onClose} ariaLabel="Motion rule editor">
       <div className="flex flex-col gap-4 px-1 pb-4">
+        <h2 className="text-h2 font-black text-hi">Motion rule</h2>
         {spec?.wind && (
           <Stepper
             label="Wind k"

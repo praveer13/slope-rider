@@ -9,7 +9,7 @@ import { clamp } from '@gridverse/kit/engine'
 
 /* ---------- tuning constants (design §5.2) ---------- */
 export const G = 18 // gravity u/s²
-export const CARVE_ACCEL = 4 // carve bonus u/s²
+export const CARVE_ACCEL = 6 // carve bonus u/s² (beats slopes ≤ ~0.35; steeper needs momentum)
 export const HOP_IMPULSE = 5.5 // u/s along curve normal
 export const DRAG_CD = 0.015 // quadratic drag
 export const V_MAX = 18 // hard backstop u/s (CCD sanity)

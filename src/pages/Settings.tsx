@@ -14,13 +14,10 @@ import {
   Minus,
   Plus,
   Hand,
-  Magnet,
-  Palette,
   Gamepad2,
 } from 'lucide-react'
-import { BottomSheet, IconButton, NeonButton, Toast } from '@gridverse/kit/ui'
+import { IconButton, NeonButton, Toast } from '@gridverse/kit/ui'
 import { useGameStore } from '../store.ts'
-import { DEFAULT_KIT_SETTINGS } from '@gridverse/kit/lib'
 import { haptics, sfx, cn } from '@gridverse/kit/lib'
 import type { KitSettings } from '@gridverse/kit/lib'
 
@@ -30,7 +27,6 @@ import type { KitSettings } from '@gridverse/kit/lib'
  */
 
 const outExpo = [0.16, 1, 0.3, 1] as [number, number, number, number]
-const sheetSpring = { type: 'spring', stiffness: 320, damping: 28 } as const
 
 function useSettingsWriter() {
   const updateSettings = useGameStore((s) => s.updateSettings)
@@ -354,7 +350,6 @@ export default function Settings() {
   const navigate = useNavigate()
   const settings = useGameStore((s) => s.settings)
   const write = useSettingsWriter()
-  const resetAll = useGameStore((s) => s.resetAll)
 
   const muted = settings.masterVolume === 0
   const prevMaster = useRef(settings.masterVolume > 0 ? settings.masterVolume : 0.8)

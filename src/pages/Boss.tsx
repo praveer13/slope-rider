@@ -13,12 +13,6 @@ import { BOSS, saveResult, type ResultPayload } from '../game/levels.ts'
  * Turn-free spatial pursuit: outrun the white wall across three ridges.
  */
 
-declare global {
-  interface Window {
-    __pw?: AvalancheSession
-  }
-}
-
 const sheetSpring = { type: 'spring', stiffness: 320, damping: 28 } as const
 
 function bossStars(got: number, total: number): number {

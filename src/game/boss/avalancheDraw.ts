@@ -150,7 +150,7 @@ export function drawWall(
   ctx.restore()
 }
 
-export function drawRider(ctx: CanvasRenderingContext2D, eng: Engine, x: number, y: number, vx: number, vy: number, mode: 'ground' | 'air') {
+export function drawRider(_ctx: CanvasRenderingContext2D, eng: Engine, x: number, y: number, vx: number, vy: number, mode: 'ground' | 'air') {
   const pos = { x, y }
   const angle = mode === 'ground' ? 0 : Math.atan2(vy, vx)
   eng.drawMascot(pos, 0.75, { rotation: angle * 0.35, squash: mode === 'air' ? 0.08 : 0 })

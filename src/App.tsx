@@ -7,12 +7,14 @@ import GameplayPage from './pages/Gameplay.tsx'
 import ResultsPage from './pages/Results.tsx'
 import ProfilePage from './pages/Profile.tsx'
 import SettingsPage from './pages/Settings.tsx'
+import BossPage from './pages/Boss.tsx'
 
 const routes = [
   { path: '/', element: <HomePage />, navId: 'home' },
   { path: '/map', element: <MapPage />, navId: 'map' },
   { path: '/codex', element: <CodexPage />, navId: 'codex' },
   { path: '/play', element: <GameplayPage /> },
+  { path: '/boss', element: <BossPage /> },
   { path: '/results', element: <ResultsPage /> },
   { path: '/profile', element: <ProfilePage />, navId: 'profile' },
   { path: '/settings', element: <SettingsPage /> },
