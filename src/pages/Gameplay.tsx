@@ -255,7 +255,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="scrim fixed inset-0 z-40 flex items-center justify-center px-6 backdrop-blur-[8px]"
+            className="scrim pointer-events-none fixed inset-0 z-40 flex items-center justify-center px-6 backdrop-blur-[8px]"
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
