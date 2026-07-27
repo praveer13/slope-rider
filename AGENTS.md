@@ -33,3 +33,12 @@ Vex (arrow-spark hero) travels the Gridverse. Same chrome pattern: Home → Map 
   gameplay surfaces.
 - Level authoring contract + harness law: `design/design.md` §4/§7. Every
   level ships a `solution` knot array the harness simulates to 3★.
+
+## Deploy (GitHub Pages, custom subdomain)
+- Live site: https://slope-rider.play.naigap.com/ served from the `gh-pages`
+  branch ROOT — so the deploy build uses base `/`, NOT the `/slope-rider/`
+  CI base. Sibling games: vecto./phaseworld.play.naigap.com.
+- Flow: `bun x vite build --base=/` → push `dist/` to the `gh-pages` branch
+  (keep `CNAME`, regenerate `404.html` as a copy of `index.html`).
+- The PWA service worker auto-updates; first visit after a deploy may show
+  the previous bundle until the new SW activates.
