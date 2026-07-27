@@ -1,12 +1,8 @@
-import kitPreset from '@gridverse/kit/tailwind.preset'
+import kitPreset from './src/kit/tailwind.preset.cjs'
 
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
-  content: [
-    './index.html',
-    './src/**/*.{ts,tsx}',
-    './node_modules/@gridverse/kit/dist/**/*.js',
-  ],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   presets: [kitPreset],
 }

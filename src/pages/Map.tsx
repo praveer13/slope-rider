@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import { Lock, Sparkles } from 'lucide-react'
-import { Chip, StarMeter } from '@gridverse/kit/ui'
-import { cn } from '@gridverse/kit/lib'
+import { Chip, StarMeter } from '@/kit/ui'
+import { cn } from '@/kit/lib'
 import { useGameStore, selectTotalStars } from '@/store'
 import {
   ZONES,

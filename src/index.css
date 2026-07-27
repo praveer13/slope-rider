@@ -18,6 +18,20 @@
     @apply h-full bg-night-0 text-hi;
   }
 
+  /* Long-press is a game input — never show OS text selection/callout. */
+  html,
+  body,
+  #root,
+  canvas {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  canvas {
+    touch-action: none;
+  }
+
   body {
     font-family: 'Nunito', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;

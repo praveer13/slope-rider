@@ -1,5 +1,5 @@
 import { Home, Map, BookOpen, User } from 'lucide-react'
-import { AppShell } from '@gridverse/kit/shell'
+import { AppShell } from '@/kit/shell'
 import HomePage from './pages/Home.tsx'
 import MapPage from './pages/Map.tsx'
 import CodexPage from './pages/Codex.tsx'

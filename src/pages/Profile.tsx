@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import { BookOpen, Star, Trophy, Zap } from 'lucide-react'
-import { TopBar, Chip, GearCounter, XpBar } from '@gridverse/kit/ui'
+import { TopBar, Chip, GearCounter, XpBar } from '@/kit/ui'
 import { asset } from '@/lib/asset'
 import {
   useGameStore,

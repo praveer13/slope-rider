@@ -1,4 +1,4 @@
-import { sfx, tone } from '@gridverse/kit'
+import { sfx, tone } from '@/kit'
 
 /**
  * srSfx — SLOPE RIDER sound design on the kit tone primitive.
@@ -41,6 +41,26 @@ export const rewind = (): void => {
 
 /** rule stepper tick */
 export const ruleTick = (): void => sfx.snap()
+
+/** knot drag quantum tick — pitch rises with y */
+export const knotTick = (frac = 0.5): void => {
+  tone({ freq: 500 + 300 * Math.min(1, Math.max(0, frac)), dur: 0.04, type: 'sine', vol: 0.1 })
+}
+
+/** knot released inside budget — soft confirmation */
+export const lineChime = (): void => {
+  tone({ freq: 620, endFreq: 760, dur: 0.08, type: 'triangle', vol: 0.12 })
+}
+
+/** over-budget drag — low buzz, no harshness */
+export const overBudgetBuzz = (): void => {
+  tone({ freq: 160, dur: 0.12, type: 'square', vol: 0.06 })
+}
+
+/** ride failure freeze — soft thud, never an error sting */
+export const failThud = (): void => {
+  tone({ freq: 200, endFreq: 110, dur: 0.3, type: 'sine', vol: 0.12 })
+}
 
 // kit carryover, single import surface
 export const { tick, pluck, squeak, win, error, snap, whoosh } = sfx

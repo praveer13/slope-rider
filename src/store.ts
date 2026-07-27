@@ -1,4 +1,4 @@
-import { createGameStore } from '@gridverse/kit/store'
+import { createGameStore } from '@/kit/store'
 import {
   selectPlayerLevel,
   selectXpIntoLevel,
@@ -7,11 +7,11 @@ import {
   selectHasAnyProgress,
   chapterOf as kitChapterOf,
   chapterName as kitChapterName,
-} from '@gridverse/kit/store'
+} from '@/kit/store'
 import { ZONES } from './lib/content'
 
 export const useGameStore = createGameStore({
-  saveKey: 'slope-rider-save-v1',
+  saveKey: 'slope-rider-save-v3',
   firstLevelId: '1-1',
 })
 

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { TopBar } from '@gridverse/kit/ui'
+import { TopBar } from '@/kit/ui'
 import { useGameStore, selectPlayerLevel } from '@/store'
 import CodexSection from '@/pages/CodexSection'
 

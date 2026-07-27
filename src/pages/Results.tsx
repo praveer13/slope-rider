@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, Map as MapIcon, RotateCcw, Sparkles } from 'lucide-react'
-import { clamp } from '@gridverse/kit/engine'
-import { Chip, NeonButton, StarMeter, XpBar } from '@gridverse/kit/ui'
+import { clamp } from '@/kit/engine'
+import { Chip, NeonButton, StarMeter, XpBar } from '@/kit/ui'
 import {
   useGameStore,
   selectPlayerLevel,
@@ -12,9 +12,10 @@ import {
   chapterName,
 } from '../store.ts'
 import { loadResult, LEVELS, type ResultPayload } from '../game/levels.ts'
+import LineThumbnail from '../components/LineThumbnail.tsx'
 import { cardById, CARDS, type CardMeta } from '@/lib/cards'
 import { ZONES } from '@/lib/content'
-import { haptics, sfx, cn } from '@gridverse/kit/lib'
+import { haptics, sfx, cn } from '@/kit/lib'
 
 const pop = { type: 'spring', stiffness: 420, damping: 24 } as const
 const gentle = { type: 'spring', stiffness: 180, damping: 22 } as const
@@ -326,6 +327,18 @@ function ResultsBody({
       ) : (
         <>
           <div className="z-10 mt-4 h-[60px]">{phase >= 1 && <StarMeter stars={payload.stars} size={48} animateEarn />}</div>
+
+          {payload.lineSegs && payload.lineSegs.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="z-10 mt-3 flex flex-col items-center gap-1"
+            >
+              <LineThumbnail segs={payload.lineSegs} zone={payload.chapter} goalX={level?.canonical.goalX} />
+              <span className="text-caption font-extrabold uppercase text-low">your line</span>
+            </motion.div>
+          )}
 
           <div className="z-10 mt-4 flex w-full max-w-[300px] flex-col gap-1.5">
             {phase >= 2 && (

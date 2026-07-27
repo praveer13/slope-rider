@@ -16,10 +16,10 @@ import {
   Hand,
   Gamepad2,
 } from 'lucide-react'
-import { IconButton, NeonButton, Toast } from '@gridverse/kit/ui'
+import { IconButton, NeonButton, Toast } from '@/kit/ui'
 import { useGameStore } from '../store.ts'
-import { haptics, sfx, cn } from '@gridverse/kit/lib'
-import type { KitSettings } from '@gridverse/kit/lib'
+import { haptics, sfx, cn } from '@/kit/lib'
+import type { KitSettings } from '@/kit/lib'
 
 /**
  * Settings — SLOPE RIDER copy. Route `/settings`.
@@ -596,7 +596,7 @@ export default function Settings() {
             <Gamepad2 className="h-8 w-8 text-coral" />
           </div>
           <p className="font-mono text-mono-s text-low">SLOPE RIDER v0.1.0</p>
-          <p className="text-caption font-extrabold uppercase text-low">Ride the derivative.</p>
+          <p className="text-caption font-extrabold uppercase text-low">Shape. Ride. Tune.</p>
           <p className="text-body font-semibold text-mid">Made for math lovers who’d rather play.</p>
         </motion.div>
 

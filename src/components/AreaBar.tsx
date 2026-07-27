@@ -1,4 +1,4 @@
-import { clamp } from '@gridverse/kit/engine'
+import { clamp } from '@/kit/engine'
 
 interface AreaBarProps {
   area: number

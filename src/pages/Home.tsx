@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router'
 import { motion } from 'framer-motion'
 import { Play, Star } from 'lucide-react'
-import { NeonButton, Chip, XpBar } from '@gridverse/kit/ui'
+import { NeonButton, Chip, XpBar } from '@/kit/ui'
 import {
   useGameStore,
   selectPlayerLevel,
@@ -64,7 +64,7 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="mt-2 text-body text-mid"
           >
-            Hold the hill. Release the sky.
+            Shape the hill. Ride the sky.
           </motion.p>
         </div>
 

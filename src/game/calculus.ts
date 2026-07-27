@@ -1,4 +1,4 @@
-import { clamp } from '@gridverse/kit/engine'
+import { clamp } from '@/kit/engine'
 
 /**
  * SLOPE RIDER math core — analytic terrain + physics.
@@ -11,7 +11,7 @@ import { clamp } from '@gridverse/kit/engine'
 export const G = 18 // gravity u/s²
 export const CARVE_ACCEL = 6 // carve bonus u/s² (beats slopes ≤ ~0.35; steeper needs momentum)
 export const HOP_IMPULSE = 5.5 // u/s along curve normal
-export const DRAG_CD = 0.015 // quadratic drag
+export const DRAG_CD = 0.03 // quadratic drag — flat-carve terminal ≈ 14.1 u/s; 18 is a true redline (design v3 §5.2)
 export const V_MAX = 18 // hard backstop u/s (CCD sanity)
 export const SHARD_TOL = 0.75 // pickup radius (grounded shards; shards float +0.5)
 export const AIR_SHARD_TOL = 0.9 // pickup radius (air shards)
@@ -19,14 +19,21 @@ export const PHYS_HZ = 120
 export const PHYS_DT = 1 / PHYS_HZ
 
 /* ---------- terrain segments (design §5.1) ---------- */
-export type SegKind = 'ramp' | 'poly2' | 'sine' | 'exp'
+export type SegKind = 'ramp' | 'poly2' | 'sine' | 'exp' | 'hermite'
 
 export interface Seg {
   kind: SegKind
-  /** ramp [m,c] | poly2 [a,b,c] | sine [A,ω,φ,y0] | exp [A,k,y0] */
+  /** ramp [m,c] | poly2 [a,b,c] | sine [A,ω,φ,y0] | exp [A,k,y0] | hermite [y0,m0,y1,m1] */
   p: readonly number[]
   x0: number
   x1: number
+}
+
+/** Hermite basis on t ∈ [0,1] */
+function hermiteBasis(t: number): [number, number, number, number] {
+  const t2 = t * t
+  const t3 = t2 * t
+  return [2 * t3 - 3 * t2 + 1, t3 - 2 * t2 + t, -2 * t3 + 3 * t2, t3 - t2]
 }
 
 export function segF(s: Seg, x: number): number {
@@ -36,6 +43,11 @@ export function segF(s: Seg, x: number): number {
     case 'poly2': return p[0]! * x * x + p[1]! * x + p[2]!
     case 'sine': return p[0]! * Math.sin(p[1]! * x + p[2]!) + p[3]!
     case 'exp': return p[0]! * Math.exp(p[1]! * x) + p[2]!
+    case 'hermite': {
+      const dx = s.x1 - s.x0
+      const [h00, h10, h01, h11] = hermiteBasis((x - s.x0) / dx)
+      return h00 * p[0]! + h10 * dx * p[1]! + h01 * p[2]! + h11 * dx * p[3]!
+    }
   }
 }
 
@@ -46,6 +58,16 @@ export function segDf(s: Seg, x: number): number {
     case 'poly2': return 2 * p[0]! * x + p[1]!
     case 'sine': return p[0]! * p[1]! * Math.cos(p[1]! * x + p[2]!)
     case 'exp': return p[0]! * p[1]! * Math.exp(p[1]! * x)
+    case 'hermite': {
+      const dx = s.x1 - s.x0
+      const t = (x - s.x0) / dx
+      const t2 = t * t
+      const dh00 = 6 * t2 - 6 * t
+      const dh10 = 3 * t2 - 4 * t + 1
+      const dh01 = -6 * t2 + 6 * t
+      const dh11 = 3 * t2 - 2 * t
+      return (dh00 * p[0]! + dh10 * dx * p[1]! + dh01 * p[2]! + dh11 * dx * p[3]!) / dx
+    }
   }
 }
 
@@ -56,6 +78,15 @@ export function segDdf(s: Seg, x: number): number {
     case 'poly2': return 2 * p[0]!
     case 'sine': return -p[0]! * p[1]! * p[1]! * Math.sin(p[1]! * x + p[2]!)
     case 'exp': return p[0]! * p[1]! * p[1]! * Math.exp(p[1]! * x)
+    case 'hermite': {
+      const dx = s.x1 - s.x0
+      const t = (x - s.x0) / dx
+      const d2h00 = 12 * t - 6
+      const d2h10 = 6 * t - 4
+      const d2h01 = -12 * t + 6
+      const d2h11 = 6 * t - 2
+      return (d2h00 * p[0]! + d2h10 * dx * p[1]! + d2h01 * p[2]! + d2h11 * dx * p[3]!) / (dx * dx)
+    }
   }
 }
 
@@ -67,6 +98,18 @@ export function segIntF(s: Seg, x: number): number {
     case 'poly2': return (p[0]! * x ** 3) / 3 + (p[1]! * x * x) / 2 + p[2]! * x
     case 'sine': return (-p[0]! * Math.cos(p[1]! * x + p[2]!)) / p[1]! + p[3]! * x
     case 'exp': return (p[0]! * Math.exp(p[1]! * x)) / p[1]! + p[2]! * x
+    case 'hermite': {
+      const dx = s.x1 - s.x0
+      const t = (x - s.x0) / dx
+      const t2 = t * t
+      const t3 = t2 * t
+      const t4 = t3 * t
+      const i00 = t4 / 2 - t3 + t
+      const i10 = t4 / 4 - (2 * t3) / 3 + t2 / 2
+      const i01 = -t4 / 2 + t3
+      const i11 = t4 / 4 - t3 / 3
+      return dx * (i00 * p[0]! + i10 * dx * p[1]! + i01 * p[2]! + i11 * dx * p[3]!)
+    }
   }
 }
 

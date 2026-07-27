@@ -34,33 +34,33 @@ const C = (
 /** The 18 collectible concept cards (design §10) + the boss reward card. */
 export const CARDS: CardMeta[] = [
   // Zone 1 — mint
-  C(1, 1, "Hold the hill and it pushes you. Steeper down, bigger push.", "The Push", "tangential gravity: a = g·sinθ.", "1-2", "Level 1-2"),
-  C(1, 2, "Release and you keep the hill's direction — until gravity wins.", "Letting Go", "projectile motion: ẍ = (0,−g).", "1-5", "Level 1-5"),
-  C(1, 3, "Climbing spends exactly what falling earned.", "Uphill Cost", "energy: v²/2 + g·h = const.", "1-9", "First Descent finale"),
+  C(1, 1, "Draw the hill down and it pushes you. Steeper down, bigger push.", "The Push", "tangential gravity: a = g·sinθ.", "1-2", "Level 1-2"),
+  C(1, 2, "Release your line and Vex rides it — until gravity wins.", "Letting Go", "projectile motion: ẍ = (0,−g).", "1-5", "Level 1-5"),
+  C(1, 3, "Draw a climb and it drinks the speed the drop paid for.", "Uphill Cost", "energy: v²/2 + g·h = const.", "1-9", "First Descent finale"),
 
   // Zone 2 — cyan
-  C(2, 1, "Every hill has a number: how much up for how much across.", "Rise Over Run", "slope m = Δy/Δx.", "2-2", "Level 2-2"),
-  C(2, 2, "The hill's number is your speed's steering wheel.", "The Speedometer", "derivative f′(x) = lim Δy/Δx.", "2-5", "Level 2-5"),
-  C(2, 3, "Minus means down. Bigger minus, faster down.", "Sign Language", "sign and magnitude of f′.", "2-9", "Steep Reading finale"),
+  C(2, 1, "Every line you draw has a number: how much up for how much across.", "Rise Over Run", "slope m = Δy/Δx.", "2-2", "Level 2-2"),
+  C(2, 2, "Your line's number is the rider's steering wheel.", "The Speedometer", "derivative f′(x) = lim Δy/Δx.", "2-5", "Level 2-5"),
+  C(2, 3, "Down lines push; up lines pull. Steeper means stronger.", "Sign Language", "sign and magnitude of f′.", "2-9", "Steep Reading finale"),
 
   // Zone 3 — violet
-  C(3, 1, "Where the hill's number is zero, things get interesting.", "Flat Tops", "critical points: f′(x) = 0.", "3-2", "Level 3-2"),
-  C(3, 2, "Crests hand you the sky for a heartbeat.", "The Launch Window", "local maximum: f′ = 0, f″ < 0.", "3-5", "Level 3-5"),
-  C(3, 3, "Bottoms catch you and throw you forward.", "Valley Floors", "local minimum: f′ = 0, f″ > 0.", "3-9", "Apex Ridge finale"),
+  C(3, 1, "Where your line's number is zero, things get interesting.", "Flat Tops", "critical points: f′(x) = 0.", "3-2", "Level 3-2"),
+  C(3, 2, "Draw a crest and it hands Vex the sky for a heartbeat.", "The Launch Window", "local maximum: f′ = 0, f″ < 0.", "3-5", "Level 3-5"),
+  C(3, 3, "A bowl in your line catches Vex and throws her forward.", "Valley Floors", "local minimum: f′ = 0, f″ > 0.", "3-9", "Apex Ridge finale"),
 
   // Zone 4 — amber
-  C(4, 1, "Light doesn't vanish. It piles up under the hill.", "Piling Up", "accumulation function A(x) = ∫ₐˣ f.", "4-2", "Level 4-2"),
-  C(4, 2, "Higher hills hide bigger piles.", "Tall Holds More", "area scales with function values.", "4-5", "Level 4-5"),
-  C(4, 3, "The pile grows even when you can't see it.", "Every Bit Counts", "A′(x) = f(x) (FTC part 1).", "4-9", "Lightfields finale"),
+  C(4, 1, "Light doesn't vanish. It piles up under your line.", "Piling Up", "accumulation function A(x) = ∫ₐˣ f.", "4-2", "Level 4-2"),
+  C(4, 2, "The higher your line, the bigger the pile beneath it.", "Tall Holds More", "area scales with function values.", "4-5", "Level 4-5"),
+  C(4, 3, "Every scrap of line feeds the pile, whether you see it or not.", "Every Bit Counts", "A′(x) = f(x) (FTC part 1).", "4-9", "Lightfields finale"),
 
   // Zone 5 — magenta
   C(5, 1, "Doors trade height-pile for speed. Exactly.", "The Trade", "FTC: ∫ₐᵇ f′ = f(b) − f(a).", "5-2", "Level 5-2"),
-  C(5, 2, "What the hill takes, a door can give back.", "Two-Way Door", "derivative and integral are inverse operations.", "5-5", "Level 5-5"),
-  C(5, 3, "The door never rounds. Not ever.", "Exact Change", "conservation E = v²/2 + g·h.", "5-9", "Portal Peaks finale"),
+  C(5, 2, "What your line gives up, a door can give back.", "Two-Way Door", "derivative and integral are inverse operations.", "5-5", "Level 5-5"),
+  C(5, 3, "A door trades height and speed to the last crumb, never rounding.", "Exact Change", "conservation E = v²/2 + g·h.", "5-9", "Portal Peaks finale"),
 
   // Zone 6 — coral
-  C(6, 1, "Write a number k. The hill pushes k-hard, always.", "The Wind Rule", "ODE ẍ = k → constant acceleration.", "6-2", "Level 6-2"),
-  C(6, 2, "Far from center? Pulled back harder. It's a rule, not a wall.", "The Spring Rule", "ẍ = −k(x−x₀) → harmonic motion.", "6-5", "Level 6-5"),
+  C(6, 1, "Write a number k. The wind pushes k-hard, always — even uphill.", "The Wind Rule", "ODE ẍ = k → constant acceleration.", "6-2", "Level 6-2"),
+  C(6, 2, "Far from your line's center, the spring pulls harder. Rule, not wall.", "The Spring Rule", "ẍ = −k(x−x₀) → harmonic motion.", "6-5", "Level 6-5"),
   C(6, 3, "Every motion rule draws its own hill in your head.", "Rules Make Shapes", "ODEs and their solution curves.", "6-9", "Wind & Spring finale"),
 
   // Boss reward card

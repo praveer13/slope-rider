@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { clamp } from '@gridverse/kit/engine'
-import { BottomSheet, Chip } from '@gridverse/kit/ui'
+import { clamp } from '@/kit/engine'
+import { BottomSheet, Chip } from '@/kit/ui'
 import { cardById } from '@/lib/cards'
 
 interface SlopeChipProps {

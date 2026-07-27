@@ -1,7 +1,7 @@
-import type { Vec } from '@gridverse/kit/engine'
-import type { Engine } from '@gridverse/kit/engine'
-import { clamp } from '@gridverse/kit/engine'
-import { Session, type UiState, type HintGesture } from '@gridverse/kit/session'
+import type { Vec } from '@/kit/engine'
+import type { Engine } from '@/kit/engine'
+import { clamp } from '@/kit/engine'
+import { Session, type UiState, type HintGesture } from '@/kit/session'
 import type { BossDef, BossRidge } from '../levels'
 import { saveMidLevel, loadMidLevel } from '../levels'
 import {
@@ -22,7 +22,7 @@ import {
   AIR_SHARD_TOL,
 } from '../calculus'
 import { rewind, shardChime, landThump, hop as hopSfx } from '../sfx'
-import { haptics } from '@gridverse/kit'
+import { haptics } from '@/kit'
 import {
   drawSky,
   drawTerrain,

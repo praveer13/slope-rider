@@ -1,10 +1,13 @@
 import type { Seg, Portal, Shard, MotionRule } from './calculus'
+import type { ShapeWindow } from './shape'
 export type { MotionRule } from './calculus'
+export type { ShapeWindow } from './shape'
 
 /**
- * SLOPE RIDER level data contracts — main-owned types.
- * ChromeBuild populates LEVELS values under design §4 constraints.
- * BOSS authored by main (integration).
+ * SLOPE RIDER v3 level data contracts (design v3 §4).
+ * A level = fixed bedrock Seg[] + shape windows the player edits.
+ * The harness simulates the canonical ride on the SOLVED curve
+ * (bedrock + windows filled with `solution` knots) and requires 3★.
  */
 
 interface Base {
@@ -18,7 +21,7 @@ interface Base {
   cardId?: string
 }
 
-/** witness input script the harness simulates (design §4) */
+/** witness input script the harness simulates on the solved curve */
 export interface CanonicalLine {
   goalX: number
   /** coast windows [x0,x1]: carve released over these x-ranges */
@@ -34,7 +37,10 @@ export interface RuleSpec {
 }
 
 export interface SRLevel extends Base {
+  /** fixed bedrock segments (gaps between them host shape windows / coast gaps) */
   terrain: Seg[]
+  /** editable shape windows (design v3 §4) — absent only on pure-ride levels */
+  shape?: ShapeWindow[]
   shards: Shard[]
   canonical: CanonicalLine
   portals?: Portal[]
@@ -44,61 +50,1218 @@ export interface SRLevel extends Base {
 }
 
 export const LEVELS: Record<string, SRLevel> = {
-  '1-1': { id: "1-1", zone: 1, name: "First Push", goal: "Ride the slope to the gate.", coach: "Hold to carve.", cardId: "z1-1", terrain: [{ kind: "ramp", p: [-0.15, 6], x0: 0, x1: 30 }, { kind: "ramp", p: [0, 1.5], x0: 30, x1: 40 }], shards: [{ x: 8, y: 5.3 }, { x: 16, y: 4.1 }, { x: 24, y: 2.9 }, { x: 32, y: 2 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '1-2': { id: "1-2", zone: 1, name: "Let Go", goal: "Release over the gap.", coach: "Release to fly.", cardId: "z1-1", terrain: [{ kind: "ramp", p: [-0.25, 7], x0: 0, x1: 20 }, { kind: "ramp", p: [0.15, 0], x0: 26, x1: 46 }], shards: [{ x: 6.667, y: 5.833 }, { x: 13.333, y: 4.167 }, { x: 20, y: 2.5 }, { x: 32.667, y: 5.4 }, { x: 39.333, y: 6.4 }], canonical: { goalX: 44.5, coast: [[20, 26]], hops: [] }, spawnX: 0 },
-  '1-3': { id: "1-3", zone: 1, name: "Uphill Cost", goal: "Carry speed through the uphill.", coach: "Uphill eats speed.", cardId: "z1-1", terrain: [{ kind: "ramp", p: [-0.2, 8], x0: 0, x1: 20 }, { kind: "ramp", p: [0.1, 2], x0: 20, x1: 40 }], shards: [{ x: 6.667, y: 7.167 }, { x: 13.333, y: 5.833 }, { x: 20, y: 4.5 }, { x: 26.667, y: 5.167 }, { x: 33.333, y: 5.833 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '1-4': { id: "1-4", zone: 1, name: "Little Hop", goal: "Hop to the flying light.", coach: "Tap low to hop.", cardId: "z1-2", terrain: [{ kind: "ramp", p: [-0.15, 6], x0: 0, x1: 18 }, { kind: "ramp", p: [0, 3.3], x0: 18, x1: 26 }, { kind: "ramp", p: [-0.1, 5.9], x0: 26, x1: 44 }], shards: [{ x: 8.8, y: 5.18 }, { x: 14.667, y: 4.3 }, { x: 17.6, y: 3.86 }, { x: 26.4, y: 3.76 }, { x: 29.333, y: 3.467 }, { x: 35.2, y: 2.88 }], canonical: { goalX: 42.5, coast: [], hops: [] }, spawnX: 0 },
-  '1-5': { id: "1-5", zone: 1, name: "Two Hills", goal: "Read both hills.", coach: "Read the steepness.", cardId: "z1-2", terrain: [{ kind: "sine", p: [1.5, 0.35, 0, 4], x0: 0, x1: 36 }, { kind: "ramp", p: [0, 4.0504345708], x0: 36, x1: 44 }], shards: [{ x: 6.286, y: 5.713 }, { x: 12.571, y: 3.073 }, { x: 18.857, y: 4.967 }, { x: 25.143, y: 5.377 }, { x: 31.429, y: 3 }, { x: 38.857, y: 4.55 }], canonical: { goalX: 42.5, coast: [], hops: [] }, spawnX: 2.4 },
-  '1-6': { id: "1-6", zone: 1, name: "Flat Means Flat", goal: "Use the flat run.", coach: "Flat keeps speed.", cardId: "z1-2", terrain: [{ kind: "ramp", p: [0, 5], x0: 0, x1: 10 }, { kind: "ramp", p: [-0.2, 7], x0: 10, x1: 30 }, { kind: "ramp", p: [0, 1], x0: 30, x1: 42 }], shards: [{ x: 6, y: 5.5 }, { x: 12, y: 5.1 }, { x: 18, y: 3.9 }, { x: 24, y: 2.7 }, { x: 30, y: 1.5 }, { x: 36, y: 1.5 }], canonical: { goalX: 40.5, coast: [], hops: [] }, spawnX: 0 },
-  '1-7': { id: "1-7", zone: 1, name: "Long Flight", goal: "Launch far from the steep.", coach: "Steep launch, far flight.", cardId: "z1-3", terrain: [{ kind: "ramp", p: [-0.3, 9], x0: 0, x1: 18 }, { kind: "ramp", p: [0.2, -1.4], x0: 26, x1: 46 }], shards: [{ x: 7.6, y: 7.22 }, { x: 15.2, y: 4.94 }, { x: 20, y: 2.087, air: true }, { x: 22, y: 1.975, air: true }, { x: 24, y: 0.778, air: true }, { x: 30.8, y: 5.26 }, { x: 38.4, y: 6.78 }], canonical: { goalX: 44.5, coast: [[18, 26]], hops: [] }, spawnX: 0 },
-  '1-8': { id: "1-8", zone: 1, name: "First Gauntlet", goal: "Chain carve and coast.", coach: "Carve, coast, carve.", cardId: "z1-3", terrain: [{ kind: "sine", p: [1, 0.3, 0, 5], x0: 0, x1: 22 }, { kind: "ramp", p: [-0.2, 9.7115413635], x0: 22, x1: 34 }, { kind: "ramp", p: [0.1, -0.4884586365], x0: 34, x1: 48 }], shards: [{ x: 6.286, y: 6.451 }, { x: 12.571, y: 4.911 }, { x: 18.857, y: 4.914 }, { x: 25.143, y: 5.183 }, { x: 31.429, y: 3.926 }, { x: 38.286, y: 3.84 }, { x: 44, y: 4.412 }], canonical: { goalX: 46.5, coast: [], hops: [] }, spawnX: 0 },
-  '1-9': { id: "1-9", zone: 1, name: "The Big Hill", goal: "Climb the big hill.", coach: "One big read.", finale: true, cardId: "z1-3", terrain: [{ kind: "ramp", p: [-0.12, 8], x0: 0, x1: 25 }, { kind: "sine", p: [2, 0.25, 0, 5.0663584331], x0: 25, x1: 55 }, { kind: "ramp", p: [0, 6.9183233187], x0: 55, x1: 64 }], shards: [{ x: 7.111, y: 7.647 }, { x: 14.222, y: 6.793 }, { x: 21.333, y: 5.94 }, { x: 28.444, y: 7.039 }, { x: 35.556, y: 6.587 }, { x: 42.667, y: 3.674 }, { x: 49.778, y: 5.323 }, { x: 56, y: 7.418 }, { x: 60, y: 7.418 }, { x: 62, y: 7.418 }], canonical: { goalX: 62.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-1': { id: "2-1", zone: 2, name: "The Number", goal: "Watch the slope number grow.", coach: "Steeper down, more go.", cardId: "z2-1", terrain: [{ kind: "ramp", p: [-0.1, 6], x0: 0, x1: 15 }, { kind: "ramp", p: [-0.3, 9], x0: 15, x1: 25 }, { kind: "ramp", p: [-0.6, 16.5], x0: 25, x1: 32 }, { kind: "ramp", p: [0, -2.7], x0: 32, x1: 42 }], shards: [{ x: 7, y: 5.8 }, { x: 14, y: 5.1 }, { x: 20, y: 3.5 }, { x: 26.5, y: 1.1 }, { x: 33.5, y: -2.2 }, { x: 38.5, y: -2.2 }], canonical: { goalX: 40.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-2': { id: "2-2", zone: 2, name: "Sign Language", goal: "Follow the sign changes.", coach: "Minus goes down.", cardId: "z2-1", terrain: [{ kind: "ramp", p: [0.3, 0], x0: 0, x1: 12 }, { kind: "ramp", p: [-0.3, 7.2], x0: 12, x1: 30 }, { kind: "ramp", p: [0, -1.8], x0: 30, x1: 40 }], shards: [{ x: 6.667, y: 2.5 }, { x: 13.333, y: 3.7 }, { x: 20, y: 1.7 }, { x: 26.667, y: -0.3 }, { x: 33.333, y: -1.3 }, { x: 37.333, y: -1.3 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-3': { id: "2-3", zone: 2, name: "Gentle vs Wild", goal: "Compare gentle and wild.", coach: "Same drop, different hill.", cardId: "z2-1", terrain: [{ kind: "ramp", p: [-0.05, 5], x0: 0, x1: 20 }, { kind: "ramp", p: [-0.5, 14], x0: 20, x1: 30 }, { kind: "ramp", p: [0, -1], x0: 30, x1: 42 }], shards: [{ x: 7, y: 5.15 }, { x: 14, y: 4.8 }, { x: 21, y: 4 }, { x: 25, y: 2 }, { x: 32, y: -0.5 }, { x: 37, y: -0.5 }, { x: 40.5, y: -0.5 }], canonical: { goalX: 40.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-4': { id: "2-4", zone: 2, name: "Speed Limit", goal: "Feel the speed limit.", coach: "Push changes where steep.", cardId: "z2-2", terrain: [{ kind: "sine", p: [2, 0.4, 0, 5], x0: 0, x1: 32 }, { kind: "ramp", p: [0, 5.4630196502], x0: 32, x1: 42 }], shards: [{ x: 5.333, y: 7.192 }, { x: 10.667, y: 3.695 }, { x: 16, y: 5.733 }, { x: 21.333, y: 7.056 }, { x: 26.667, y: 3.607 }, { x: 32, y: 5.963 }, { x: 37, y: 5.963 }], canonical: { goalX: 40.5, coast: [], hops: [] }, spawnX: 3.2 },
-  '2-5': { id: "2-5", zone: 2, name: "The SlopeChip", goal: "Track the slope chip.", coach: "Watch the number change.", cardId: "z2-2", terrain: [{ kind: "poly2", p: [-0.01, -0.05, 4.5], x0: 0, x1: 30 }, { kind: "ramp", p: [0, -6], x0: 30, x1: 42 }], shards: [{ x: 5.714, y: 4.388 }, { x: 11.429, y: 3.122 }, { x: 17.143, y: 1.204 }, { x: 22.857, y: -1.367 }, { x: 28.571, y: -4.592 }, { x: 34, y: -5.5 }, { x: 38, y: -5.5 }, { x: 40, y: -5.5 }], canonical: { goalX: 40.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-6': { id: "2-6", zone: 2, name: "Switchbacks", goal: "Flip signs, keep flow.", coach: "Flip signs, keep flow.", cardId: "z2-2", terrain: [{ kind: "ramp", p: [-0.4, 8], x0: 0, x1: 10 }, { kind: "ramp", p: [0.4, 0], x0: 10, x1: 20 }, { kind: "ramp", p: [-0.4, 16], x0: 20, x1: 30 }, { kind: "ramp", p: [0.3, -5], x0: 30, x1: 40 }, { kind: "ramp", p: [0, 7], x0: 40, x1: 46 }], shards: [{ x: 5, y: 6.5 }, { x: 10, y: 4.5 }, { x: 15, y: 6.5 }, { x: 20, y: 8.5 }, { x: 25, y: 6.5 }, { x: 30, y: 4.5 }, { x: 35, y: 6 }, { x: 42.5, y: 7.5 }], canonical: { goalX: 44.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-7': { id: "2-7", zone: 2, name: "Curvy Steep", goal: "Steep on curves.", coach: "Steep moves on curves.", cardId: "z2-3", terrain: [{ kind: "sine", p: [2.5, 0.5, 0, 6], x0: 0, x1: 26 }, { kind: "ramp", p: [-0.2, 12.2504175921], x0: 26, x1: 40 }], shards: [{ x: 5.2, y: 7.789 }, { x: 10.4, y: 4.291 }, { x: 15.6, y: 8.996 }, { x: 20.8, y: 4.43 }, { x: 23, y: 4.311 }, { x: 25, y: 6.384, air: true }, { x: 31, y: 6.55 }, { x: 37, y: 5.35 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 2.6 },
-  '2-8': { id: "2-8", zone: 2, name: "Reading Gauntlet", goal: "Read the gauntlet.", coach: "Number shows steepness.", cardId: "z2-3", terrain: [{ kind: "poly2", p: [0.01, -0.5, 9], x0: 0, x1: 25 }, { kind: "sine", p: [1.5, 0.4, 0, 3.5660316663], x0: 25, x1: 45 }], shards: [{ x: 5, y: 7.25 }, { x: 10, y: 5.5 }, { x: 15, y: 4.25 }, { x: 20, y: 3.5 }, { x: 25, y: 3.25 }, { x: 30, y: 3.261 }, { x: 35, y: 5.552 }, { x: 40, y: 3.634 }, { x: 43, y: 2.571 }], canonical: { goalX: 43.5, coast: [], hops: [] }, spawnX: 0 },
-  '2-9': { id: "2-9", zone: 2, name: "Steepest Descent", goal: "Take the steepest descent.", coach: "Steepest wins.", finale: true, cardId: "z2-3", terrain: [{ kind: "ramp", p: [-0.08, 8], x0: 0, x1: 12 }, { kind: "poly2", p: [-0.005, 0, 7.76], x0: 12, x1: 40 }, { kind: "ramp", p: [-0.6, 23.76], x0: 40, x1: 48 }, { kind: "ramp", p: [0, -5.04], x0: 48, x1: 58 }], shards: [{ x: 6, y: 8.02 }, { x: 12, y: 7.54 }, { x: 18, y: 6.64 }, { x: 24, y: 5.38 }, { x: 30, y: 3.76 }, { x: 36, y: 1.78 }, { x: 42, y: -0.94 }, { x: 44, y: -2.14 }, { x: 50, y: -4.54 }, { x: 54, y: -4.54 }], canonical: { goalX: 56.5, coast: [], hops: [] }, spawnX: 0 },
-  '3-1': { id: "3-1", zone: 3, name: "The Flat Top", goal: "Launch from the flat top.", coach: "Flat top, big launch.", cardId: "z3-1", terrain: [{ kind: "poly2", p: [-0.03, 1.2, -5], x0: 0, x1: 20 }, { kind: "ramp", p: [-0.2, 11], x0: 20, x1: 38 }], shards: [{ x: 14, y: 6.42 }, { x: 13.333, y: 6.167 }, { x: 20, y: 7.5 }, { x: 26, y: 6.3 }, { x: 32, y: 5.1 }, { x: 36, y: 4.3 }], canonical: { goalX: 36.5, coast: [], hops: [] }, spawnX: 14 },
-  '3-2': { id: "3-2", zone: 3, name: "Valley Floor", goal: "Slingshot from the bottom.", coach: "Bottoms slingshot.", cardId: "z3-1", terrain: [{ kind: "poly2", p: [0.04, -1.6, 14], x0: 0, x1: 20 }, { kind: "ramp", p: [0.2, -6], x0: 20, x1: 38 }], shards: [{ x: 6.667, y: 5.611 }, { x: 13.333, y: 0.278 }, { x: 20, y: -1.5 }, { x: 26, y: -0.3 }, { x: 32, y: 0.9 }, { x: 36, y: 1.7 }], canonical: { goalX: 36.5, coast: [], hops: [] }, spawnX: 0 },
-  '3-3': { id: "3-3", zone: 3, name: "Top Then Drop", goal: "Crest, then fly.", coach: "Crest, then fly.", cardId: "z3-1", terrain: [{ kind: "sine", p: [2, 0.3, 0, 5], x0: 0, x1: 21 }, { kind: "ramp", p: [-0.35, 12.383627801], x0: 21, x1: 40 }], shards: [{ x: 8, y: 6.851 }, { x: 10, y: 5.782 }, { x: 16, y: 3.508 }, { x: 20, y: 4.991, air: true }, { x: 24, y: 7.351, air: true }, { x: 30, y: 3.884, air: true }, { x: 32, y: 1.684 }], canonical: { goalX: 38.5, coast: [], hops: [10, 20] }, spawnX: 2.8 },
-  '3-4': { id: "3-4", zone: 3, name: "Double Dip", goal: "Ride both dips.", coach: "Two bottoms, two boosts.", cardId: "z3-2", terrain: [{ kind: "sine", p: [1.5, 0.5, 0, 4], x0: 0, x1: 25 }, { kind: "ramp", p: [0, 3.900517154], x0: 25, x1: 34 }], shards: [{ x: 5, y: 5.398 }, { x: 10, y: 3.062 }, { x: 15, y: 5.907 }, { x: 20, y: 3.684 }, { x: 25, y: 4.401 }, { x: 28, y: 4.401 }, { x: 32, y: 4.401 }], canonical: { goalX: 32.5, coast: [], hops: [] }, spawnX: 2.5 },
-  '3-5': { id: "3-5", zone: 3, name: "Apex Slow-Mo", goal: "Float at the apex.", coach: "Float at the top.", cardId: "z3-2", terrain: [{ kind: "poly2", p: [-0.025, 1, -5], x0: 0, x1: 20 }, { kind: "ramp", p: [-0.25, 10], x0: 20, x1: 38 }], shards: [{ x: 12.667, y: 4.156 }, { x: 12.867, y: 4.228 }, { x: 13.067, y: 4.298 }, { x: 19, y: 5.475 }, { x: 25.333, y: 4.167 }, { x: 28.5, y: 3.375 }, { x: 31.667, y: 2.583 }, { x: 36.559, y: 1.41, air: true }], canonical: { goalX: 36.5, coast: [], hops: [] }, spawnX: 12.667 },
-  '3-6': { id: "3-6", zone: 3, name: "Land the Downside", goal: "Land on the downside.", coach: "Land going down.", cardId: "z3-2", terrain: [{ kind: "ramp", p: [-0.3, 9], x0: 0, x1: 14 }, { kind: "sine", p: [1.8, 0.35, 0, 4.8], x0: 22, x1: 44 }], shards: [{ x: 4.667, y: 8.1 }, { x: 9.333, y: 6.7 }, { x: 14, y: 5.3 }, { x: 26, y: 5.874 }, { x: 30, y: 3.717 }, { x: 34, y: 4.187 }, { x: 38, y: 6.505 }, { x: 42, y: 6.822 }], canonical: { goalX: 42.5, coast: [[14, 22]], hops: [] }, spawnX: 0 },
-  '3-7': { id: "3-7", zone: 3, name: "Uphill Landing", goal: "Soften the uphill landing.", coach: "Soft landings lose less.", cardId: "z3-3", terrain: [{ kind: "ramp", p: [-0.35, 10], x0: 0, x1: 14 }, { kind: "ramp", p: [0.15, -0.1], x0: 22, x1: 40 }], shards: [{ x: 4.667, y: 8.867 }, { x: 9.333, y: 7.233 }, { x: 14, y: 5.6 }, { x: 25, y: 4.15 }, { x: 28, y: 4.6 }, { x: 31, y: 5.05 }, { x: 34, y: 5.5 }, { x: 37, y: 5.95 }], canonical: { goalX: 38.5, coast: [[14, 22]], hops: [] }, spawnX: 0 },
-  '3-8': { id: "3-8", zone: 3, name: "Ridge Gauntlet", goal: "Top, drop, roll.", coach: "Top, drop, roll.", cardId: "z3-3", terrain: [{ kind: "poly2", p: [-0.03, 1.2, -6], x0: 0, x1: 20 }, { kind: "sine", p: [1.2, 0.4, 0, 4.8127701041], x0: 20, x1: 42 }], shards: [{ x: 14, y: 5.42 }, { x: 13.333, y: 5.167 }, { x: 20, y: 6.5 }, { x: 23.5, y: 5.393, air: true }, { x: 27, y: 4.213, air: true }, { x: 31, y: 5.114 }, { x: 36, y: 6.472 }, { x: 40, y: 4.967 }], canonical: { goalX: 40.5, coast: [], hops: [] }, spawnX: 14 },
-  '3-9': { id: "3-9", zone: 3, name: "The Great Apex", goal: "One perfect crest.", coach: "One perfect crest.", finale: true, cardId: "z3-3", terrain: [{ kind: "poly2", p: [-0.005, 0.4, 0], x0: 0, x1: 40 }, { kind: "ramp", p: [-0.4, 24], x0: 40, x1: 55 }, { kind: "ramp", p: [0, 2], x0: 55, x1: 64 }], shards: [{ x: 9.143, y: 3.739 }, { x: 12.8, y: 5.142, air: true }, { x: 18.286, y: 6.143 }, { x: 25.6, y: 7.513, air: true }, { x: 27.429, y: 7.71 }, { x: 36.571, y: 8.441 }, { x: 38.4, y: 8.537, air: true }, { x: 45.714, y: 6.214 }, { x: 51.2, y: 4.02 }, { x: 54.857, y: 2.557 }], canonical: { goalX: 62.5, coast: [], hops: [] }, spawnX: 4 },
-  '4-1': { id: "4-1", zone: 4, name: "Gather Light", goal: "Gather the light.", coach: "Light fills the bar.", cardId: "z4-1", terrain: [{ kind: "ramp", p: [-0.15, 6], x0: 0, x1: 30 }, { kind: "ramp", p: [0, 1.5], x0: 30, x1: 40 }], shards: [{ x: 4.444, y: 5.833 }, { x: 8.889, y: 5.167 }, { x: 13.333, y: 4.5 }, { x: 17.778, y: 3.833 }, { x: 22.222, y: 3.167 }, { x: 26.667, y: 2.5 }, { x: 31.111, y: 2 }, { x: 36.667, y: 2 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '4-2': { id: "4-2", zone: 4, name: "Tall Hill, Big Bar", goal: "Fill the tall bar.", coach: "High hills hold more.", cardId: "z4-1", terrain: [{ kind: "ramp", p: [-0.15, 9], x0: 0, x1: 30 }, { kind: "ramp", p: [0, 4.5], x0: 30, x1: 40 }], shards: [{ x: 4.444, y: 8.833 }, { x: 8.889, y: 8.167 }, { x: 13.333, y: 7.5 }, { x: 17.778, y: 6.833 }, { x: 22.222, y: 6.167 }, { x: 26.667, y: 5.5 }, { x: 31.111, y: 5 }, { x: 36.667, y: 5 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '4-3': { id: "4-3", zone: 4, name: "Fill as You Go", goal: "Collect as you ride.", coach: "Every bit counts.", cardId: "z4-1", terrain: [{ kind: "sine", p: [1, 0.25, 0, 5], x0: 0, x1: 40 }], shards: [{ x: 4, y: 6.341 }, { x: 8, y: 6.409 }, { x: 12, y: 5.641 }, { x: 16, y: 4.743 }, { x: 20, y: 4.541 }, { x: 24, y: 5.221 }, { x: 28, y: 6.157 }, { x: 32, y: 6.489 }, { x: 36, y: 5.912 }, { x: 38, y: 5.425 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '4-4': { id: "4-4", zone: 4, name: "Air Light", goal: "Grab light in the air.", coach: "Flying finds more.", cardId: "z4-2", terrain: [{ kind: "ramp", p: [-0.3, 9], x0: 0, x1: 16 }, { kind: "ramp", p: [0.2, -1.2], x0: 24, x1: 44 }], shards: [{ x: 3.2, y: 8.54 }, { x: 6.4, y: 7.58 }, { x: 9.6, y: 6.62 }, { x: 12.8, y: 5.66 }, { x: 17.6, y: 3.028, air: true }, { x: 19.2, y: 2.962, air: true }, { x: 20.8, y: 2.069, air: true }, { x: 22.4, y: 1.007, air: true }, { x: 29.6, y: 5.22 }, { x: 36.8, y: 6.66 }], canonical: { goalX: 42.5, coast: [[16, 24]], hops: [] }, spawnX: 0 },
-  '4-5': { id: "4-5", zone: 4, name: "The Wide Valley", goal: "Fill the wide valley.", coach: "Wide floor, wide bar.", cardId: "z4-2", terrain: [{ kind: "poly2", p: [0.02, -0.8, 12], x0: 0, x1: 20 }, { kind: "ramp", p: [0.1, 2], x0: 20, x1: 40 }], shards: [{ x: 4.444, y: 9.34 }, { x: 8.889, y: 6.969 }, { x: 13.333, y: 5.389 }, { x: 17.778, y: 4.599 }, { x: 22.222, y: 4.722 }, { x: 26.667, y: 5.167 }, { x: 31.111, y: 5.611 }, { x: 35.556, y: 6.056 }, { x: 38.5, y: 6.35 }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '4-6': { id: "4-6", zone: 4, name: "Don't Leave Any", goal: "Leave no shard behind.", coach: "Clean the curve.", cardId: "z4-2", terrain: [{ kind: "sine", p: [1.5, 0.4, 0, 5], x0: 0, x1: 32 }, { kind: "ramp", p: [-0.2, 11.7472647377], x0: 32, x1: 44 }], shards: [{ x: 3.692, y: 6.993 }, { x: 7.385, y: 5.78 }, { x: 11.077, y: 4.059 }, { x: 14.769, y: 4.95 }, { x: 18.462, y: 6.838 }, { x: 22.154, y: 6.301 }, { x: 25.846, y: 4.312 }, { x: 29.538, y: 4.476 }, { x: 33.333, y: 5.581 }, { x: 36.667, y: 4.914 }, { x: 40, y: 4.247 }, { x: 42.5, y: 3.747 }], canonical: { goalX: 42.5, coast: [], hops: [] }, spawnX: 2.133 },
-  '4-7': { id: "4-7", zone: 4, name: "Light Ladder", goal: "Climb the light ladder.", coach: "Steps of light.", cardId: "z4-3", terrain: [{ kind: "ramp", p: [-0.2, 8], x0: 0, x1: 20 }, { kind: "ramp", p: [0, 4], x0: 20, x1: 28 }, { kind: "ramp", p: [-0.2, 9.6], x0: 28, x1: 40 }], shards: [{ x: 4, y: 7.7 }, { x: 8, y: 6.9 }, { x: 10, y: 6.5 }, { x: 12, y: 6.1 }, { x: 16, y: 5.3 }, { x: 20, y: 4.5 }, { x: 24, y: 4.5 }, { x: 28, y: 4.5 }, { x: 30, y: 4.1 }, { x: 32, y: 3.7 }, { x: 36, y: 2.9 }, { x: 38.506, y: 2.472, air: true }], canonical: { goalX: 38.5, coast: [], hops: [] }, spawnX: 0 },
-  '4-8': { id: "4-8", zone: 4, name: "Field Gauntlet", goal: "Fill the whole field.", coach: "Full bar, full flow.", cardId: "z4-3", terrain: [{ kind: "poly2", p: [-0.01, 0.2, 5], x0: 0, x1: 25 }, { kind: "sine", p: [1, 0.35, 0, 3.1252760462], x0: 25, x1: 45 }], shards: [{ x: 2, y: 5.86 }, { x: 5, y: 6.25 }, { x: 8, y: 6.46 }, { x: 11, y: 6.49 }, { x: 14, y: 6.34 }, { x: 17, y: 6.01 }, { x: 20, y: 5.5 }, { x: 23, y: 4.81 }, { x: 26, y: 3.944 }, { x: 29, y: 2.962 }, { x: 32, y: 2.646 }, { x: 35, y: 3.314 }, { x: 38, y: 4.295 }, { x: 42, y: 4.471 }], canonical: { goalX: 43.5, coast: [], hops: [] }, spawnX: 0 },
-  '4-9': { id: "4-9", zone: 4, name: "The Motherlode", goal: "Mine the motherlode.", coach: "Fill it all.", finale: true, cardId: "z4-3", terrain: [{ kind: "sine", p: [2, 0.2, 0, 6], x0: 0, x1: 50 }, { kind: "ramp", p: [0, 4.9119577782], x0: 50, x1: 60 }], shards: [{ x: 3.333, y: 7.737 }, { x: 6.667, y: 8.444 }, { x: 10, y: 8.319 }, { x: 13.333, y: 7.415 }, { x: 16.667, y: 6.119 }, { x: 20, y: 4.986 }, { x: 23.333, y: 4.502 }, { x: 26.667, y: 4.873 }, { x: 30, y: 5.941 }, { x: 33.333, y: 7.248 }, { x: 36.667, y: 8.235 }, { x: 40, y: 8.479 }, { x: 43.333, y: 7.875 }, { x: 46.667, y: 6.683 }, { x: 51.25, y: 5.412 }, { x: 56.25, y: 5.412 }], canonical: { goalX: 58.5, coast: [], hops: [] }, spawnX: 3.333 },
-  '5-1': { id: "5-1", zone: 5, name: "The Blue Door", goal: "Pass through the blue door.", coach: "Doors trade height.", cardId: "z5-1", terrain: [{ kind: "ramp", p: [-0.2, 8], x0: 0, x1: 20 }, { kind: "ramp", p: [0.3, -2], x0: 28, x1: 44 }], shards: [{ x: 5.143, y: 7.471 }, { x: 10.286, y: 6.443 }, { x: 15.429, y: 5.414 }, { x: 28.571, y: 7.071 }, { x: 33.714, y: 8.614 }, { x: 38.857, y: 10.157 }], canonical: { goalX: 42.5, coast: [[20, 28]], hops: [] }, portals: [{ a: 20, b: 28 }], spawnX: 0 },
-  '5-2': { id: "5-2", zone: 5, name: "Up Door, Out Slow", goal: "Climb up, exit slow.", coach: "Higher door, slower out.", cardId: "z5-1", terrain: [{ kind: "ramp", p: [-0.15, 6], x0: 0, x1: 18 }, { kind: "ramp", p: [0.4, -4.7], x0: 30, x1: 42 }], shards: [{ x: 5.143, y: 5.729 }, { x: 10.286, y: 4.957 }, { x: 15.429, y: 4.186 }, { x: 31.714, y: 8.486 }, { x: 35.143, y: 9.857 }, { x: 38.571, y: 11.228 }], canonical: { goalX: 40.5, coast: [[18, 30]], hops: [] }, portals: [{ a: 18, b: 30 }], spawnX: 0 },
-  '5-3': { id: "5-3", zone: 5, name: "Down Door Dash", goal: "Drop down, dash out.", coach: "Lower door, faster out.", cardId: "z5-1", terrain: [{ kind: "ramp", p: [-0.1, 7], x0: 0, x1: 16 }, { kind: "ramp", p: [-0.4, 13.8], x0: 30, x1: 44 }], shards: [{ x: 4.571, y: 7.043 }, { x: 9.143, y: 6.586 }, { x: 13.714, y: 6.129 }, { x: 32, y: 1.5 }, { x: 35.333, y: 0.167 }, { x: 38.667, y: -1.167 }, { x: 42, y: -2.5 }], canonical: { goalX: 42.5, coast: [[16, 30]], hops: [] }, portals: [{ a: 16, b: 30 }], spawnX: 0 },
-  '5-4': { id: "5-4", zone: 5, name: "Two Doors", goal: "Chain two doors.", coach: "Chain the doors.", cardId: "z5-2", terrain: [{ kind: "sine", p: [1.5, 0.3, 0, 5], x0: 0, x1: 20 }, { kind: "ramp", p: [0, 3.2], x0: 24, x1: 28 }, { kind: "ramp", p: [-0.3, 11], x0: 32, x1: 46 }], shards: [{ x: 4.444, y: 6.958 }, { x: 8.889, y: 6.186 }, { x: 13.333, y: 4.365 }, { x: 17.778, y: 4.28 }, { x: 24.571, y: 3.7 }, { x: 26, y: 3.7 }, { x: 34.667, y: 1.1 }, { x: 40, y: -0.5 }], canonical: { goalX: 44.5, coast: [[20, 24], [28, 32]], hops: [] }, portals: [{ a: 20, b: 24 }, { a: 28, b: 32 }], spawnX: 2 },
-  '5-5': { id: "5-5", zone: 5, name: "Bank the Hill", goal: "Bank height into speed.", coach: "Spend height, keep speed.", cardId: "z5-2", terrain: [{ kind: "ramp", p: [-0.25, 9], x0: 0, x1: 20 }, { kind: "ramp", p: [0.5, -7.05], x0: 30, x1: 42 }], shards: [{ x: 5, y: 8.25 }, { x: 10, y: 7 }, { x: 15, y: 5.75 }, { x: 31.5, y: 9.2 }, { x: 34.5, y: 10.7 }, { x: 37.5, y: 12.2 }, { x: 40.5, y: 13.7 }], canonical: { goalX: 40.5, coast: [[20, 30]], hops: [] }, portals: [{ a: 20, b: 30 }], spawnX: 0 },
-  '5-6': { id: "5-6", zone: 5, name: "Exact Trade", goal: "Make the exact trade.", coach: "The trade is exact.", cardId: "z5-2", terrain: [{ kind: "poly2", p: [-0.02, 0.8, -2], x0: 0, x1: 20 }, { kind: "ramp", p: [-0.2, 10], x0: 32, x1: 46 }], shards: [{ x: 11.333, y: 4.998 }, { x: 11.533, y: 5.066 }, { x: 13.333, y: 5.611 }, { x: 17.778, y: 6.401 }, { x: 34.667, y: 3.567 }, { x: 38.667, y: 2.767 }, { x: 42.667, y: 1.967 }, { x: 44.5, y: 1.6 }], canonical: { goalX: 44.5, coast: [[20, 32]], hops: [] }, portals: [{ a: 20, b: 32 }], spawnX: 11.333 },
-  '5-7': { id: "5-7", zone: 5, name: "Door Ladder", goal: "Climb the door ladder.", coach: "Climb the ladder down.", cardId: "z5-3", terrain: [{ kind: "ramp", p: [-0.2, 10], x0: 0, x1: 14 }, { kind: "ramp", p: [-0.2, 12.8], x0: 22, x1: 32 }, { kind: "ramp", p: [-0.2, 15.6], x0: 40, x1: 50 }], shards: [{ x: 3.5, y: 9.8 }, { x: 7, y: 9.1 }, { x: 10.5, y: 8.4 }, { x: 25, y: 8.3 }, { x: 28, y: 7.7 }, { x: 31, y: 7.1 }, { x: 43, y: 7.5 }, { x: 46, y: 6.9 }, { x: 49, y: 6.3 }], canonical: { goalX: 48.5, coast: [[14, 22], [32, 40]], hops: [] }, portals: [{ a: 14, b: 22 }, { a: 32, b: 40 }], spawnX: 0 },
-  '5-8': { id: "5-8", zone: 5, name: "Portal Gauntlet", goal: "Read before the portal.", coach: "Read before the door.", cardId: "z5-3", terrain: [{ kind: "sine", p: [1, 0.4, 0, 6], x0: 0, x1: 16 }, { kind: "poly2", p: [0.02, -1.2, 20], x0: 26, x1: 40 }, { kind: "ramp", p: [0, 4], x0: 40, x1: 48 }], shards: [{ x: 3.455, y: 7.482 }, { x: 6.909, y: 6.869 }, { x: 10.364, y: 5.656 }, { x: 13.818, y: 5.814 }, { x: 27.273, y: 2.649 }, { x: 30.727, y: 2.511 }, { x: 34.182, y: 2.85 }, { x: 37.636, y: 3.666 }, { x: 41.091, y: 4.5 }, { x: 44.545, y: 4.5 }], canonical: { goalX: 46.5, coast: [[16, 26]], hops: [] }, portals: [{ a: 16, b: 26 }], spawnX: 1.067 },
-  '5-9': { id: "5-9", zone: 5, name: "The Two-Way Door", goal: "Master the two-way trade.", coach: "Master the trade.", finale: true, cardId: "z5-3", terrain: [{ kind: "ramp", p: [-0.3, 2], x0: 0, x1: 18 }, { kind: "sine", p: [1.5, 0.3, 0, -2.3], x0: 28, x1: 50 }], shards: [{ x: 3.6, y: 1.42 }, { x: 7.2, y: 0.34 }, { x: 10.8, y: -0.74 }, { x: 14.4, y: -1.82 }, { x: 23, y: -2.908, air: true }, { x: 25, y: -4.093, air: true }, { x: 31, y: -1.563, air: true }, { x: 39, y: -2.943 }, { x: 31.5, y: -1.838 }, { x: 39.5, y: -2.785 }, { x: 47, y: -0.301 }, { x: 48.5, y: -0.426 }], canonical: { goalX: 48.5, coast: [[18, 28]], hops: [] }, portals: [{ a: 18, b: 28 }], spawnX: 0 },
-  '6-1': { id: "6-1", zone: 6, name: "The Wind Rule", goal: "Write the wind rule.", coach: "Write the wind.", cardId: "z6-1", terrain: [{ kind: "ramp", p: [0.05, 0], x0: 0, x1: 40 }], shards: [{ x: 6.667, y: 0.833 }, { x: 13.333, y: 1.167 }, { x: 20, y: 1.5 }, { x: 26.667, y: 1.833 }, { x: 33.333, y: 2.167 }, { x: 38, y: 2.4 }], canonical: { goalX: 38.5, coast: [[0, 38.5]], hops: [] }, ruleSpec: { wind: { range: [0.5, 3], solvable: 2 } }, spawnX: 0 },
-  '6-2': { id: "6-2", zone: 6, name: "Stronger Wind", goal: "Push harder with k.", coach: "More k, more push.", cardId: "z6-1", terrain: [{ kind: "ramp", p: [0.15, 0], x0: 0, x1: 36 }], shards: [{ x: 6, y: 1.4 }, { x: 12, y: 2.3 }, { x: 18, y: 3.2 }, { x: 24, y: 4.1 }, { x: 30, y: 5 }, { x: 34, y: 5.6 }], canonical: { goalX: 34.5, coast: [[0, 34.5]], hops: [] }, ruleSpec: { wind: { range: [0.5, 3], solvable: 2.7 } }, spawnX: 0 },
-  '6-3': { id: "6-3", zone: 6, name: "Wind Gap", goal: "Let wind carry the gap.", coach: "Wind carries you.", cardId: "z6-1", terrain: [{ kind: "ramp", p: [0.05, 0], x0: 0, x1: 16 }, { kind: "ramp", p: [0.2, -1.2], x0: 24, x1: 44 }], shards: [{ x: 6, y: 0.8 }, { x: 12, y: 1.1 }, { x: 18.667, y: -0.1, air: true }, { x: 21.333, y: -2.657, air: true }, { x: 26, y: 4.5 }, { x: 32, y: 5.7 }, { x: 38, y: 6.9 }], canonical: { goalX: 42.5, coast: [[0, 16]], hops: [] }, ruleSpec: { wind: { range: [1, 4], solvable: 3 } }, spawnX: 0 },
-  '6-4': { id: "6-4", zone: 6, name: "The Spring Rule", goal: "Feel the spring pull.", coach: "The rule pulls back.", cardId: "z6-2", terrain: [{ kind: "ramp", p: [0, 6], x0: 0, x1: 40 }], shards: [{ x: 6.667, y: 6.5 }, { x: 13.333, y: 6.5 }, { x: 20, y: 6.5 }, { x: 26.667, y: 6.5 }, { x: 33.333, y: 6.5 }, { x: 38, y: 6.5 }], canonical: { goalX: 38.5, coast: [[0, 38.5]], hops: [] }, ruleSpec: { spring: { range: [0.2, 1.5], x0: 38.5, solvable: 0.8 } }, spawnX: 0 },
-  '6-5': { id: "6-5", zone: 6, name: "Soft vs Hard Spring", goal: "Tune spring stiffness.", coach: "Hard pulls harder.", cardId: "z6-2", terrain: [{ kind: "sine", p: [0.5, 0.2, 0, 5], x0: 0, x1: 44 }], shards: [{ x: 5.5, y: 5.946 }, { x: 11, y: 5.904 }, { x: 16.5, y: 5.421 }, { x: 22, y: 5.024 }, { x: 27.5, y: 5.147 }, { x: 33, y: 5.656 }, { x: 38.5, y: 5.994 }, { x: 42, y: 5.927 }], canonical: { goalX: 42.5, coast: [[0, 42.5]], hops: [] }, ruleSpec: { spring: { range: [0.2, 2], x0: 42, solvable: 1.5 } }, spawnX: 0 },
-  '6-6': { id: "6-6", zone: 6, name: "Spring Launch", goal: "Sling from the spring.", coach: "Pull back, sling forward.", cardId: "z6-2", terrain: [{ kind: "ramp", p: [0.2, 4], x0: 0, x1: 12 }, { kind: "ramp", p: [-0.3, 10], x0: 12, x1: 32 }], shards: [{ x: 4.571, y: 5.414 }, { x: 9.143, y: 6.329 }, { x: 10.667, y: 6.633 }, { x: 13.714, y: 6.6, air: true }, { x: 18.286, y: 5.014 }, { x: 21.333, y: 4.1 }, { x: 22.857, y: 3.643 }, { x: 26.157, y: 2.653 }], canonical: { goalX: 30.5, coast: [[0, 12]], hops: [13.2] }, ruleSpec: { spring: { range: [0.5, 2.5], x0: 20, solvable: 1.5 } }, spawnX: 0 },
-  '6-7': { id: "6-7", zone: 6, name: "Wind + Spring", goal: "Balance wind and spring.", coach: "Two rules, one ride.", cardId: "z6-3", terrain: [{ kind: "ramp", p: [0.05, 0], x0: 0, x1: 44 }], shards: [{ x: 5.5, y: 0.775 }, { x: 11, y: 1.05 }, { x: 16.5, y: 1.325 }, { x: 22, y: 1.6 }, { x: 27.5, y: 1.875 }, { x: 33, y: 2.15 }, { x: 38.5, y: 2.425 }, { x: 42, y: 2.6 }], canonical: { goalX: 42.5, coast: [[0, 42.5]], hops: [] }, ruleSpec: { wind: { range: [0, 2], solvable: 1.5 }, spring: { range: [0.2, 1.5], x0: 42, solvable: 0.8 } }, spawnX: 0 },
-  '6-8': { id: "6-8", zone: 6, name: "Rule Gauntlet", goal: "Tune to the rule.", coach: "Tune the rule.", cardId: "z6-3", terrain: [{ kind: "sine", p: [1, 0.3, 0, 5], x0: 0, x1: 42 }], shards: [{ x: 4.667, y: 6.485 }, { x: 9.333, y: 5.835 }, { x: 14, y: 4.628 }, { x: 18.667, y: 4.869 }, { x: 23.333, y: 6.157 }, { x: 28, y: 6.355 }, { x: 32.667, y: 5.133 }, { x: 37.333, y: 4.521 }, { x: 37.164, y: 4.512 }, { x: 37.364, y: 4.523 }], canonical: { goalX: 40.5, coast: [[0, 40.5]], hops: [] }, ruleSpec: { spring: { range: [0.4, 2], x0: 40.5, solvable: 1.5 } }, spawnX: 0 },
-  '6-9': { id: "6-9", zone: 6, name: "The Perfect Rule", goal: "Write the perfect rule.", coach: "Write the perfect rule.", finale: true, cardId: "z6-3", terrain: [{ kind: "poly2", p: [0.01, 0.1, 1.5], x0: 0, x1: 30 }, { kind: "ramp", p: [-0.2, 19.5], x0: 30, x1: 55 }], shards: [{ x: 5.5, y: 2.853 }, { x: 11, y: 4.31 }, { x: 13.75, y: 5.266 }, { x: 16.5, y: 6.373 }, { x: 22, y: 9.04 }, { x: 27.5, y: 12.313 }, { x: 33, y: 13.4 }, { x: 38.5, y: 12.3 }, { x: 41.25, y: 11.75 }, { x: 44, y: 11.2 }, { x: 49.5, y: 10.1 }, { x: 53.54, y: 9.292 }], canonical: { goalX: 53.5, coast: [[0, 30]], hops: [] }, ruleSpec: { wind: { range: [0.5, 3], solvable: 2 }, spring: { range: [0.2, 2], x0: 53.5, solvable: 1 } }, spawnX: 0 }
+  '1-1': {
+    id: '1-1', zone: 1, name: 'First Push', cardId: 'z1-1',
+    goal: 'Draw the line through the light.', coach: 'Drag knots to the light.',
+    terrain: [
+      { kind: 'ramp', p: [0, 6], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1.5], x0: 24, x1: 40 },
+    ],
+    shape: [
+      { x0: 6, x1: 24, knots: 3, minY: 0, maxY: 8, startY: 6, endY: 1.5, solution: [5.75, 5, 2.5] },
+    ],
+    shards: [
+      { x: 3, y: 6.50 },
+      { x: 10.5, y: 6.25 },
+      { x: 15, y: 5.50 },
+      { x: 19.5, y: 3.00 },
+      { x: 30, y: 2.00 },
+    ],
+    canonical: { goalX: 38.5, coast: [], hops: [] },
+  },
+  '1-2': {
+    id: '1-2', zone: 1, name: 'Let Go', cardId: 'z1-1',
+    goal: 'Shape the line that clears the gap.', coach: 'Release to fly.',
+    terrain: [
+      { kind: 'ramp', p: [-0.3, 9.7], x0: 14, x1: 18 },
+      { kind: 'ramp', p: [0.2, -1.4], x0: 26, x1: 46 },
+    ],
+    shape: [
+      { x0: 2, x1: 14, knots: 2, minY: 3, maxY: 9, startY: 8, endY: 5.5, solution: [7.5, 6.25] },
+    ],
+    shards: [
+      { x: 6, y: 8.00 },
+      { x: 10, y: 6.75 },
+      { x: 16, y: 5.40 },
+      { x: 20, y: 2.60, air: true },
+      { x: 22, y: 2.50, air: true },
+      { x: 24, y: 1.90, air: true },
+      { x: 33, y: 5.70 },
+      { x: 40, y: 7.10 },
+    ],
+    canonical: { goalX: 44.5, coast: [[18, 26]], hops: [] },
+    spawnX: 2,
+  },
+  '1-3': {
+    id: '1-3', zone: 1, name: 'Dip Down', cardId: 'z1-1',
+    goal: 'Draw the long slide down.', coach: 'Keep the line dropping.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1.5], x0: 24, x1: 44 },
+    ],
+    shape: [
+      { x0: 6, x1: 24, knots: 3, minY: 0, maxY: 9, startY: 8, endY: 1.5, solution: [6.5, 4.75, 3.25] },
+    ],
+    shards: [
+      { x: 3, y: 8.50 },
+      { x: 10.5, y: 7.00 },
+      { x: 15, y: 5.25 },
+      { x: 19.5, y: 3.75 },
+      { x: 30, y: 2.00 },
+      { x: 38, y: 2.00 },
+    ],
+    canonical: { goalX: 42.5, coast: [], hops: [] },
+  },
+  '1-4': {
+    id: '1-4', zone: 1, name: 'Long Slide', cardId: 'z1-1',
+    goal: 'Draw one smooth downhill line.', coach: 'One smooth drop.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 1.5], x0: 28, x1: 48 },
+    ],
+    shape: [
+      { x0: 5, x1: 28, knots: 4, minY: 0, maxY: 10, startY: 9, endY: 1.5, solution: [7.5, 6, 4.5, 3] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 9, y: 8.20 },
+      { x: 14, y: 6.57 },
+      { x: 19, y: 4.93 },
+      { x: 24, y: 3.30 },
+      { x: 33, y: 2.00 },
+      { x: 40, y: 2.00 },
+    ],
+    canonical: { goalX: 46.5, coast: [], hops: [] },
+  },
+  '1-5': {
+    id: '1-5', zone: 1, name: 'Air Walk', cardId: 'z1-2',
+    goal: 'Shape the takeoff over the gap.', coach: 'Crest the end hard.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 8 },
+      { kind: 'ramp', p: [0, 3], x0: 26, x1: 30 },
+      { kind: 'ramp', p: [0, 1], x0: 34, x1: 52 },
+    ],
+    shape: [
+      { x0: 8, x1: 26, knots: 3, minY: 1, maxY: 10, startY: 8, endY: 3, solution: [6.75, 5.5, 4.25] },
+    ],
+    shards: [
+      { x: 4, y: 8.50 },
+      { x: 12, y: 7.39 },
+      { x: 17, y: 6.00 },
+      { x: 21, y: 4.89 },
+      { x: 28, y: 3.50 },
+      { x: 31, y: 3.00, air: true },
+      { x: 42, y: 1.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [[26, 34]], hops: [] },
+  },
+  '1-6': {
+    id: '1-6', zone: 1, name: 'Twin Drops', cardId: 'z1-2',
+    goal: 'Shape both descents to carry speed.', coach: 'Two drops, one ride.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 6], x0: 18, x1: 22 },
+      { kind: 'ramp', p: [0, 1], x0: 40, x1: 56 },
+    ],
+    shape: [
+      { x0: 5, x1: 18, knots: 3, minY: 3, maxY: 10, startY: 9, endY: 6, solution: [8.25, 7.5, 6.75] },
+      { x0: 22, x1: 40, knots: 3, minY: 0, maxY: 7, startY: 6, endY: 1, solution: [4.75, 3.5, 2.25] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 9, y: 8.58 },
+      { x: 14, y: 7.42 },
+      { x: 20, y: 6.50 },
+      { x: 27, y: 5.11 },
+      { x: 33, y: 3.44 },
+      { x: 45, y: 1.50 },
+    ],
+    canonical: { goalX: 54.5, coast: [], hops: [] },
+  },
+  '1-7': {
+    id: '1-7', zone: 1, name: 'Long Drop', cardId: 'z1-2',
+    goal: 'Draw a smooth drop to the end.', coach: 'Bowl feeds the exit.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 2], x0: 30, x1: 48 },
+    ],
+    shape: [
+      { x0: 6, x1: 30, knots: 4, minY: 0, maxY: 9, startY: 8, endY: 2, solution: [6.75, 5.5, 4.5, 3.25] },
+    ],
+    shards: [
+      { x: 3, y: 8.50 },
+      { x: 10, y: 7.46 },
+      { x: 15, y: 6.14 },
+      { x: 20, y: 5.09 },
+      { x: 25, y: 3.80 },
+      { x: 36, y: 2.50 },
+      { x: 42, y: 2.50 },
+    ],
+    canonical: { goalX: 46.5, coast: [], hops: [] },
+  },
+  '1-8': {
+    id: '1-8', zone: 1, name: 'First Gauntlet', cardId: 'z1-2',
+    goal: 'Shape two drops in one run.', coach: 'Keep speed through both.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 4 },
+      { kind: 'ramp', p: [0, 5], x0: 16, x1: 20 },
+      { kind: 'ramp', p: [0, 1], x0: 36, x1: 54 },
+    ],
+    shape: [
+      { x0: 4, x1: 16, knots: 3, minY: 3, maxY: 10, startY: 9, endY: 5, solution: [8, 7, 6] },
+      { x0: 20, x1: 36, knots: 3, minY: 0, maxY: 6, startY: 5, endY: 1, solution: [4, 3, 2] },
+    ],
+    shards: [
+      { x: 2, y: 9.50 },
+      { x: 8, y: 8.17 },
+      { x: 13, y: 6.50 },
+      { x: 18, y: 5.50 },
+      { x: 25, y: 4.25 },
+      { x: 31, y: 2.75 },
+      { x: 45, y: 1.50 },
+    ],
+    canonical: { goalX: 52.5, coast: [], hops: [] },
+  },
+  '1-9': {
+    id: '1-9', zone: 1, name: 'The Big Hill', cardId: 'z1-3', finale: true,
+    goal: 'Draw the long way down.', coach: 'Draw the whole mountain.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1], x0: 30, x1: 54 },
+    ],
+    shape: [
+      { x0: 6, x1: 30, knots: 5, minY: 0, maxY: 11, startY: 10, endY: 1, solution: [8.5, 7, 5.5, 4, 2.5] },
+    ],
+    shards: [
+      { x: 3, y: 10.50 },
+      { x: 9, y: 9.38 },
+      { x: 13, y: 7.88 },
+      { x: 17, y: 6.38 },
+      { x: 21, y: 4.88 },
+      { x: 25, y: 3.38 },
+      { x: 34, y: 1.50 },
+      { x: 42, y: 1.50 },
+    ],
+    canonical: { goalX: 52.5, coast: [], hops: [] },
+  },
+  '2-1': {
+    id: '2-1', zone: 2, name: 'The Number', cardId: 'z2-1',
+    goal: 'Draw within the steepness cap.', coach: 'The cap is the lesson.',
+    terrain: [
+      { kind: 'ramp', p: [-0.2, 9], x0: 0, x1: 8 },
+      { kind: 'ramp', p: [0, 2.4], x0: 26, x1: 42 },
+    ],
+    shape: [
+      { x0: 8, x1: 26, knots: 4, minY: 0, maxY: 9, startY: 7.4, endY: 2.4, slopeClamp: 0.6, solution: [6.5, 5.5, 4.25, 3.25] },
+    ],
+    shards: [
+      { x: 4, y: 8.70 },
+      { x: 11.6, y: 7.10 },
+      { x: 15.2, y: 5.90 },
+      { x: 18.8, y: 4.70 },
+      { x: 22.4, y: 3.70 },
+      { x: 33, y: 2.90 },
+      { x: 38, y: 2.90 },
+    ],
+    canonical: { goalX: 40.5, coast: [], hops: [] },
+  },
+  '2-2': {
+    id: '2-2', zone: 2, name: 'Gentle Cap', cardId: 'z2-1',
+    goal: 'Shape a line under the cap.', coach: 'The cap is the limit.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 8 },
+      { kind: 'ramp', p: [0, 2], x0: 26, x1: 46 },
+    ],
+    shape: [
+      { x0: 8, x1: 26, knots: 3, minY: 0, maxY: 10, startY: 9, endY: 2, slopeClamp: 0.5, solution: [7.25, 5.5, 3.75] },
+    ],
+    shards: [
+      { x: 4, y: 9.50 },
+      { x: 11, y: 8.33 },
+      { x: 15, y: 6.78 },
+      { x: 19, y: 5.22 },
+      { x: 30, y: 2.50 },
+      { x: 38, y: 2.50 },
+    ],
+    canonical: { goalX: 44.5, coast: [], hops: [] },
+  },
+  '2-3': {
+    id: '2-3', zone: 2, name: 'Flat Top', cardId: 'z2-1',
+    goal: 'Flatten the middle of your line.', coach: 'Top stays low.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 2], x0: 26, x1: 46 },
+    ],
+    shape: [
+      { x0: 6, x1: 26, knots: 4, minY: 1, maxY: 9, startY: 8, endY: 2, slopeClamp: 0.4, solution: [6.75, 5.5, 4.5, 3.25] },
+    ],
+    shards: [
+      { x: 3, y: 8.50 },
+      { x: 10, y: 7.25 },
+      { x: 15, y: 5.74 },
+      { x: 20, y: 4.39 },
+      { x: 30, y: 2.50 },
+      { x: 38, y: 2.50 },
+    ],
+    canonical: { goalX: 44.5, coast: [], hops: [] },
+  },
+  '2-4': {
+    id: '2-4', zone: 2, name: 'Ink Meter', cardId: 'z2-1',
+    goal: 'Shape the line inside the ink.', coach: 'Ink is tight.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 2], x0: 28, x1: 48 },
+    ],
+    shape: [
+      { x0: 5, x1: 28, knots: 4, minY: 0, maxY: 9, startY: 8, endY: 2, ink: 24, slopeClamp: 0.6, solution: [6.75, 5.5, 4.5, 3.25] },
+    ],
+    shards: [
+      { x: 2.5, y: 8.50 },
+      { x: 10, y: 7.14 },
+      { x: 15, y: 5.81 },
+      { x: 20, y: 4.69 },
+      { x: 30, y: 2.50 },
+      { x: 38, y: 2.50 },
+    ],
+    canonical: { goalX: 46.5, coast: [], hops: [] },
+  },
+  '2-5': {
+    id: '2-5', zone: 2, name: 'Steep Costs', cardId: 'z2-2',
+    goal: 'Steep lines drink ink.', coach: 'Steep costs ink.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 2], x0: 26, x1: 46 },
+    ],
+    shape: [
+      { x0: 5, x1: 26, knots: 4, minY: 0, maxY: 9, startY: 8, endY: 2, ink: 22, slopeClamp: 0.6, solution: [6.75, 5.5, 4.5, 3.25] },
+    ],
+    shards: [
+      { x: 2.5, y: 8.50 },
+      { x: 9, y: 7.31 },
+      { x: 13, y: 6.11 },
+      { x: 17, y: 5.15 },
+      { x: 21, y: 3.99 },
+      { x: 30, y: 2.50 },
+      { x: 38, y: 2.50 },
+    ],
+    canonical: { goalX: 44.5, coast: [], hops: [] },
+  },
+  '2-6': {
+    id: '2-6', zone: 2, name: 'Steep Drop', cardId: 'z2-2',
+    goal: 'Draw a steep downhill line.', coach: 'Drop but stay capped.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1], x0: 28, x1: 50 },
+    ],
+    shape: [
+      { x0: 6, x1: 28, knots: 4, minY: 0, maxY: 10, startY: 9, endY: 1, ink: 25, slopeClamp: 0.5, solution: [7.5, 5.75, 4.25, 2.5] },
+    ],
+    shards: [
+      { x: 3, y: 9.50 },
+      { x: 10, y: 8.15 },
+      { x: 14, y: 6.56 },
+      { x: 18, y: 5.17 },
+      { x: 22, y: 3.63 },
+      { x: 32, y: 1.50 },
+      { x: 40, y: 1.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+  },
+  '2-7': {
+    id: '2-7', zone: 2, name: 'Ink Saver', cardId: 'z2-2',
+    goal: 'Draw a shorter curve.', coach: 'Less ink, same drop.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 3], x0: 26, x1: 46 },
+    ],
+    shape: [
+      { x0: 5, x1: 26, knots: 5, minY: 1, maxY: 10, startY: 9, endY: 3, ink: 23, slopeClamp: 0.55, solution: [8, 7, 6, 5, 4] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 8, y: 8.64 },
+      { x: 12, y: 7.50 },
+      { x: 16, y: 6.36 },
+      { x: 20, y: 5.21 },
+      { x: 30, y: 3.50 },
+      { x: 38, y: 3.50 },
+    ],
+    canonical: { goalX: 44.5, coast: [], hops: [] },
+  },
+  '2-8': {
+    id: '2-8', zone: 2, name: 'Tight Cap', cardId: 'z2-2',
+    goal: 'Stay shallow and make it fit.', coach: 'Shallow saves ink.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 2], x0: 28, x1: 50 },
+    ],
+    shape: [
+      { x0: 5, x1: 28, knots: 5, minY: 0, maxY: 9, startY: 8, endY: 2, ink: 25, slopeClamp: 0.45, solution: [7, 6, 5, 4, 3] },
+    ],
+    shards: [
+      { x: 2.5, y: 8.50 },
+      { x: 9, y: 7.46 },
+      { x: 13, y: 6.41 },
+      { x: 17, y: 5.37 },
+      { x: 21, y: 4.33 },
+      { x: 32, y: 2.50 },
+      { x: 40, y: 2.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+  },
+  '2-9': {
+    id: '2-9', zone: 2, name: 'Steepest Descent', cardId: 'z2-3', finale: true,
+    goal: 'Draw the steepest drop yet.', coach: 'Spend ink for speed.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1], x0: 30, x1: 56 },
+    ],
+    shape: [
+      { x0: 6, x1: 30, knots: 5, minY: 0, maxY: 11, startY: 10, endY: 1, ink: 27, slopeClamp: 0.5, solution: [8.5, 7, 5.5, 4, 2.5] },
+    ],
+    shards: [
+      { x: 3, y: 10.50 },
+      { x: 10, y: 9.00 },
+      { x: 14, y: 7.50 },
+      { x: 18, y: 6.00 },
+      { x: 22, y: 4.50 },
+      { x: 26, y: 3.00 },
+      { x: 36, y: 1.50 },
+      { x: 44, y: 1.50 },
+    ],
+    canonical: { goalX: 54.5, coast: [], hops: [] },
+  },
+  '3-1': {
+    id: '3-1', zone: 3, name: 'The Flat Top', cardId: 'z3-1',
+    goal: 'Shape a flat top to launch.', coach: 'Flat top, big launch.',
+    terrain: [
+      { kind: 'ramp', p: [-0.25, 8], x0: 0, x1: 10 },
+      { kind: 'ramp', p: [-0.2, 10.4], x0: 32, x1: 46 },
+    ],
+    shape: [
+      { x0: 10, x1: 26, knots: 3, minY: 2, maxY: 9, startY: 5.5, endY: 6.5, solution: [3.5, 4, 5.75] },
+    ],
+    shards: [
+      { x: 5, y: 7.25 },
+      { x: 14, y: 4.00 },
+      { x: 18, y: 4.50 },
+      { x: 22, y: 6.25 },
+      { x: 28, y: 6.20, air: true },
+      { x: 30, y: 5.40, air: true },
+      { x: 36, y: 3.80 },
+      { x: 42, y: 2.60 },
+    ],
+    canonical: { goalX: 44.5, coast: [[26, 32]], hops: [] },
+  },
+  '3-2': {
+    id: '3-2', zone: 3, name: 'Valley Floor', cardId: 'z3-1',
+    goal: 'Slingshot out of the bowl.', coach: 'Rise, then release.',
+    terrain: [
+      { kind: 'ramp', p: [0, 7], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1], x0: 36, x1: 54 },
+    ],
+    shape: [
+      { x0: 6, x1: 26, knots: 3, minY: 2, maxY: 10, startY: 7, endY: 8, solution: [5, 4.5, 7.5] },
+    ],
+    shards: [
+      { x: 3, y: 7.50 },
+      { x: 12, y: 5.25 },
+      { x: 17, y: 5.42 },
+      { x: 21, y: 8.00 },
+      { x: 27, y: 8.50, air: true },
+      { x: 42, y: 1.50 },
+    ],
+    canonical: { goalX: 52.5, coast: [[26, 36]], hops: [] },
+  },
+  '3-3': {
+    id: '3-3', zone: 3, name: 'Top Then Drop', cardId: 'z3-1',
+    goal: 'Shape a crest, then fly.', coach: 'Peak at the edge.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 8 },
+      { kind: 'ramp', p: [0, 2], x0: 34, x1: 52 },
+    ],
+    shape: [
+      { x0: 8, x1: 26, knots: 3, minY: 2, maxY: 10, startY: 8, endY: 8, solution: [6, 5, 7.5] },
+    ],
+    shards: [
+      { x: 4, y: 8.50 },
+      { x: 12, y: 6.68 },
+      { x: 17, y: 5.50 },
+      { x: 21, y: 7.79 },
+      { x: 27, y: 8.50, air: true },
+      { x: 42, y: 2.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [[26, 34]], hops: [] },
+  },
+  '3-4': {
+    id: '3-4', zone: 3, name: 'Flat Run', cardId: 'z3-1',
+    goal: 'Draw a high flat line.', coach: 'Bowl throws you.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 9], x0: 28, x1: 48 },
+    ],
+    shape: [
+      { x0: 6, x1: 28, knots: 4, minY: 1, maxY: 10, startY: 9, endY: 9, solution: [9, 9, 9, 9] },
+    ],
+    shards: [
+      { x: 3, y: 9.50 },
+      { x: 10, y: 9.50 },
+      { x: 15, y: 9.50 },
+      { x: 20, y: 9.50 },
+      { x: 25, y: 9.50 },
+      { x: 36, y: 9.50 },
+      { x: 42, y: 9.50 },
+    ],
+    canonical: { goalX: 46.5, coast: [], hops: [] },
+  },
+  '3-5': {
+    id: '3-5', zone: 3, name: 'Apex Slow-Mo', cardId: 'z3-2',
+    goal: 'Shape a late crest to launch.', coach: 'Crest late and high.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 8 },
+      { kind: 'ramp', p: [0, 1], x0: 36, x1: 56 },
+    ],
+    shape: [
+      { x0: 8, x1: 28, knots: 4, minY: 2, maxY: 10, startY: 8, endY: 8, solution: [6.5, 5, 6, 7.5] },
+    ],
+    shards: [
+      { x: 4, y: 8.50 },
+      { x: 13, y: 6.57 },
+      { x: 18, y: 5.81 },
+      { x: 23, y: 7.68 },
+      { x: 30, y: 8.50, air: true },
+      { x: 44, y: 1.50 },
+    ],
+    canonical: { goalX: 54.5, coast: [[28, 36]], hops: [] },
+  },
+  '3-6': {
+    id: '3-6', zone: 3, name: 'Bowl Toss', cardId: 'z3-2',
+    goal: 'Shape a bowl that throws you out.', coach: 'Use the bottom.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0.75, -19], x0: 28, x1: 32 },
+      { kind: 'ramp', p: [0, 7], x0: 40, x1: 56 },
+    ],
+    shape: [
+      { x0: 6, x1: 28, knots: 4, minY: 1, maxY: 10, startY: 9, endY: 2, solution: [7.5, 6.25, 4.75, 3.5] },
+    ],
+    shards: [
+      { x: 3, y: 9.50 },
+      { x: 10, y: 8.13 },
+      { x: 15, y: 6.69 },
+      { x: 20, y: 5.01 },
+      { x: 24, y: 3.87 },
+      { x: 30, y: 4.00 },
+      { x: 38, y: 7.50, air: true },
+      { x: 46, y: 7.50 },
+    ],
+    canonical: { goalX: 54.5, coast: [[32, 40]], hops: [] },
+  },
+  '3-7': {
+    id: '3-7', zone: 3, name: 'High Crest', cardId: 'z3-2',
+    goal: 'Shape a high crest to clear.', coach: 'Save height for crest.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 7 },
+      { kind: 'ramp', p: [0, 1], x0: 38, x1: 58 },
+    ],
+    shape: [
+      { x0: 7, x1: 30, knots: 4, minY: 1, maxY: 11, startY: 8, endY: 9, solution: [6, 5, 7, 8.5] },
+    ],
+    shards: [
+      { x: 3.5, y: 8.50 },
+      { x: 13, y: 6.03 },
+      { x: 18, y: 6.09 },
+      { x: 23, y: 8.31 },
+      { x: 28, y: 9.34 },
+      { x: 31, y: 9.00, air: true },
+      { x: 46, y: 1.50 },
+    ],
+    canonical: { goalX: 56.5, coast: [[30, 38]], hops: [] },
+  },
+  '3-8': {
+    id: '3-8', zone: 3, name: 'Ridge Gauntlet', cardId: 'z3-2',
+    goal: 'Shape two crests in one run.', coach: 'Shape both takeoffs.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 1], x0: 34, x1: 52 },
+    ],
+    shape: [
+      { x0: 5, x1: 18, knots: 3, minY: 3, maxY: 11, startY: 9, endY: 8, solution: [6.5, 6, 7.5] },
+      { x0: 22, x1: 34, knots: 3, minY: 1, maxY: 9, startY: 8, endY: 1, solution: [6, 4, 2] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 8, y: 7.13 },
+      { x: 13, y: 7.12 },
+      { x: 16, y: 8.27 },
+      { x: 20, y: 8.25, air: true },
+      { x: 24, y: 7.17 },
+      { x: 30, y: 3.09 },
+      { x: 38, y: 1.50 },
+      { x: 45, y: 1.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [[18, 22]], hops: [] },
+  },
+  '3-9': {
+    id: '3-9', zone: 3, name: 'The Great Apex', cardId: 'z3-3', finale: true,
+    goal: 'Draw the highest launch yet.', coach: 'Build height, release.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1], x0: 32, x1: 58 },
+    ],
+    shape: [
+      { x0: 6, x1: 24, knots: 5, minY: 2, maxY: 12, startY: 10, endY: 9, solution: [7, 6, 7.5, 8.5, 8.5] },
+    ],
+    shards: [
+      { x: 3, y: 10.50 },
+      { x: 10, y: 6.93 },
+      { x: 14, y: 7.44 },
+      { x: 18, y: 9.00 },
+      { x: 22, y: 9.13 },
+      { x: 28, y: 9.50, air: true },
+      { x: 40, y: 1.50 },
+      { x: 48, y: 1.50 },
+    ],
+    canonical: { goalX: 56.5, coast: [[24, 32]], hops: [] },
+  },
+  '4-1': {
+    id: '4-1', zone: 4, name: 'Gather Light', cardId: 'z4-1',
+    goal: 'Spend ink where the light is.', coach: 'Ink is limited. Spend well.',
+    terrain: [
+      { kind: 'ramp', p: [0, 6], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 2], x0: 30, x1: 42 },
+    ],
+    shape: [
+      { x0: 6, x1: 30, knots: 5, minY: 0, maxY: 8, startY: 6, endY: 2, ink: 26, solution: [6.25, 5.75, 5, 4, 3] },
+    ],
+    shards: [
+      { x: 3, y: 6.50 },
+      { x: 10, y: 6.75 },
+      { x: 14, y: 6.25 },
+      { x: 18, y: 5.50 },
+      { x: 22, y: 4.50 },
+      { x: 26, y: 3.50 },
+      { x: 33, y: 2.50 },
+      { x: 38, y: 2.50 },
+    ],
+    canonical: { goalX: 40.5, coast: [], hops: [] },
+  },
+  '4-2': {
+    id: '4-2', zone: 4, name: 'Tall Hill', cardId: 'z4-1',
+    goal: 'Pile light under your line.', coach: 'High holds more.',
+    terrain: [
+      { kind: 'ramp', p: [0, 7], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 2], x0: 28, x1: 50 },
+    ],
+    shape: [
+      { x0: 5, x1: 28, knots: 4, minY: 0, maxY: 9, startY: 7, endY: 2, ink: 24, solution: [6, 5, 4, 3] },
+    ],
+    shards: [
+      { x: 2.5, y: 7.50 },
+      { x: 8, y: 6.85 },
+      { x: 12, y: 5.98 },
+      { x: 16, y: 5.11 },
+      { x: 20, y: 4.24 },
+      { x: 24, y: 3.37 },
+      { x: 31, y: 2.50 },
+      { x: 38, y: 2.50 },
+      { x: 44, y: 2.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+  },
+  '4-3': {
+    id: '4-3', zone: 4, name: 'Keep Filling', cardId: 'z4-1',
+    goal: 'Draw high to pile light.', coach: 'Spend ink on height.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 1], x0: 26, x1: 50 },
+    ],
+    shape: [
+      { x0: 5, x1: 26, knots: 5, minY: 0, maxY: 10, startY: 8, endY: 1, ink: 24, solution: [6.75, 5.75, 4.5, 3.25, 2.25] },
+    ],
+    shards: [
+      { x: 2.5, y: 8.50 },
+      { x: 8, y: 7.42 },
+      { x: 12, y: 6.25 },
+      { x: 16, y: 4.82 },
+      { x: 20, y: 3.45 },
+      { x: 24, y: 2.23 },
+      { x: 30, y: 1.50 },
+      { x: 38, y: 1.50 },
+      { x: 44, y: 1.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+  },
+  '4-4': {
+    id: '4-4', zone: 4, name: 'Air Light', cardId: 'z4-1',
+    goal: 'Gather light in the air.', coach: 'Ink follows light.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 2], x0: 30, x1: 52 },
+    ],
+    shape: [
+      { x0: 6, x1: 30, knots: 5, minY: 0, maxY: 9, startY: 8, endY: 2, ink: 26, solution: [7, 6, 5, 4, 3] },
+    ],
+    shards: [
+      { x: 3, y: 8.50 },
+      { x: 10, y: 7.50 },
+      { x: 14, y: 6.50 },
+      { x: 18, y: 5.50 },
+      { x: 22, y: 4.50 },
+      { x: 26, y: 3.50 },
+      { x: 34, y: 2.50 },
+      { x: 40, y: 2.50 },
+      { x: 46, y: 2.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [], hops: [] },
+  },
+  '4-5': {
+    id: '4-5', zone: 4, name: 'The Wide Valley', cardId: 'z4-2',
+    goal: 'Pile light across the wide valley.', coach: 'Bulk up the middle.',
+    terrain: [
+      { kind: 'ramp', p: [0, 7], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 2], x0: 28, x1: 50 },
+    ],
+    shape: [
+      { x0: 5, x1: 28, knots: 5, minY: 0, maxY: 9, startY: 7, endY: 2, ink: 24, solution: [6.25, 5.25, 4.5, 3.75, 2.75] },
+    ],
+    shards: [
+      { x: 2.5, y: 7.50 },
+      { x: 8, y: 6.93 },
+      { x: 12, y: 5.91 },
+      { x: 16, y: 5.10 },
+      { x: 20, y: 4.32 },
+      { x: 24, y: 3.29 },
+      { x: 31, y: 2.50 },
+      { x: 38, y: 2.50 },
+      { x: 44, y: 2.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+  },
+  '4-6': {
+    id: '4-6', zone: 4, name: 'Clean Sweep', cardId: 'z4-2',
+    goal: 'Gather every scrap of light.', coach: 'Max out the area.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 1], x0: 30, x1: 52 },
+    ],
+    shape: [
+      { x0: 5, x1: 30, knots: 5, minY: 0, maxY: 10, startY: 8, endY: 1, ink: 27, solution: [6.75, 5.75, 4.5, 3.25, 2.25] },
+    ],
+    shards: [
+      { x: 2.5, y: 8.50 },
+      { x: 9, y: 7.30 },
+      { x: 13, y: 6.34 },
+      { x: 17, y: 5.15 },
+      { x: 21, y: 3.94 },
+      { x: 25, y: 2.96 },
+      { x: 33, y: 1.50 },
+      { x: 40, y: 1.50 },
+      { x: 46, y: 1.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [], hops: [] },
+  },
+  '4-7': {
+    id: '4-7', zone: 4, name: 'Light Ladder', cardId: 'z4-2',
+    goal: 'Split ink across two windows.', coach: 'Split the ink.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 3], x0: 16, x1: 20 },
+      { kind: 'ramp', p: [0, 1], x0: 36, x1: 56 },
+    ],
+    shape: [
+      { x0: 5, x1: 16, knots: 3, minY: 0, maxY: 10, startY: 9, endY: 3, ink: 13, solution: [7.5, 6, 4.5] },
+      { x0: 20, x1: 36, knots: 3, minY: 0, maxY: 5, startY: 3, endY: 1, ink: 17, solution: [2.5, 2, 1.5] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 8, y: 7.86 },
+      { x: 12, y: 5.68 },
+      { x: 18, y: 3.50 },
+      { x: 24, y: 3.00 },
+      { x: 28, y: 2.50 },
+      { x: 32, y: 2.00 },
+      { x: 44, y: 1.50 },
+    ],
+    canonical: { goalX: 54.5, coast: [], hops: [] },
+  },
+  '4-8': {
+    id: '4-8', zone: 4, name: 'Field Gauntlet', cardId: 'z4-2',
+    goal: 'Draw one tall line of light.', coach: 'Tall bridge.',
+    terrain: [
+      { kind: 'ramp', p: [0, 8], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 1], x0: 30, x1: 52 },
+    ],
+    shape: [
+      { x0: 5, x1: 30, knots: 6, minY: 0, maxY: 10, startY: 8, endY: 1, ink: 28, solution: [7, 6, 5, 4, 3, 2] },
+    ],
+    shards: [
+      { x: 2.5, y: 8.50 },
+      { x: 9, y: 7.38 },
+      { x: 13, y: 6.26 },
+      { x: 17, y: 5.14 },
+      { x: 21, y: 4.02 },
+      { x: 25, y: 2.90 },
+      { x: 33, y: 1.50 },
+      { x: 40, y: 1.50 },
+      { x: 46, y: 1.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [], hops: [] },
+  },
+  '4-9': {
+    id: '4-9', zone: 4, name: 'The Motherlode', cardId: 'z4-3', finale: true,
+    goal: 'Pile up every bit of light.', coach: 'Fill the whole hill.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 1], x0: 32, x1: 60 },
+    ],
+    shape: [
+      { x0: 6, x1: 32, knots: 6, minY: 0, maxY: 11, startY: 9, endY: 1, ink: 29, solution: [7.75, 6.75, 5.5, 4.5, 3.25, 2.25] },
+    ],
+    shards: [
+      { x: 3, y: 9.50 },
+      { x: 10, y: 8.17 },
+      { x: 14, y: 7.07 },
+      { x: 18, y: 5.76 },
+      { x: 22, y: 4.63 },
+      { x: 26, y: 3.36 },
+      { x: 30, y: 2.19 },
+      { x: 38, y: 1.50 },
+      { x: 46, y: 1.50 },
+      { x: 54, y: 1.50 },
+    ],
+    canonical: { goalX: 58.5, coast: [], hops: [] },
+  },
+  '5-1': {
+    id: '5-1', zone: 5, name: 'The Blue Door', cardId: 'z5-1',
+    goal: 'Draw fast to trade up.', coach: 'Doors trade height.',
+    terrain: [
+      { kind: 'ramp', p: [-0.3, 9], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [-0.2, 8], x0: 16, x1: 20 },
+      { kind: 'ramp', p: [0.3, -2], x0: 28, x1: 44 },
+    ],
+    shape: [
+      { x0: 6, x1: 16, knots: 2, minY: 2, maxY: 9, startY: 7.2, endY: 4.8, solution: [6.5, 5.5] },
+    ],
+    shards: [
+      { x: 3, y: 8.60 },
+      { x: 9.33, y: 7.00 },
+      { x: 12.67, y: 6.00 },
+      { x: 18, y: 4.90 },
+      { x: 31, y: 7.80 },
+      { x: 37, y: 9.60 },
+    ],
+    canonical: { goalX: 42.5, coast: [[20, 28]], hops: [] },
+    portals: [{ a: 20, b: 28 }],
+  },
+  '5-2': {
+    id: '5-2', zone: 5, name: 'First Trade', cardId: 'z5-1',
+    goal: 'Shape the drop through the door.', coach: 'Dive to the door.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 7], x0: 18, x1: 22 },
+      { kind: 'ramp', p: [0, 3], x0: 28, x1: 50 },
+    ],
+    shape: [
+      { x0: 5, x1: 18, knots: 2, minY: 3, maxY: 10, startY: 9, endY: 7, solution: [8.25, 7.75] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 9, y: 8.80 },
+      { x: 13, y: 8.34 },
+      { x: 17, y: 7.68 },
+      { x: 20, y: 7.50 },
+      { x: 30, y: 3.50 },
+      { x: 38, y: 3.50 },
+      { x: 44, y: 3.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+    portals: [{ a: 22, b: 28 }],
+  },
+  '5-3': {
+    id: '5-3', zone: 5, name: 'Speed Door', cardId: 'z5-1',
+    goal: 'Draw speed into the door.', coach: 'Speed opens doors.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 6], x0: 20, x1: 24 },
+      { kind: 'ramp', p: [0, 2], x0: 34, x1: 56 },
+    ],
+    shape: [
+      { x0: 6, x1: 20, knots: 3, minY: 2, maxY: 11, startY: 10, endY: 6, solution: [9, 8, 7] },
+    ],
+    shards: [
+      { x: 3, y: 10.50 },
+      { x: 10, y: 9.36 },
+      { x: 14, y: 8.21 },
+      { x: 18, y: 7.07 },
+      { x: 22, y: 6.50 },
+      { x: 36, y: 2.50 },
+      { x: 38, y: 2.50 },
+      { x: 46, y: 2.50 },
+    ],
+    canonical: { goalX: 54.5, coast: [], hops: [] },
+    portals: [{ a: 24, b: 34 }],
+  },
+  '5-4': {
+    id: '5-4', zone: 5, name: 'High Door', cardId: 'z5-1',
+    goal: 'Shape high before the door.', coach: 'High in, fast out.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 7], x0: 22, x1: 26 },
+      { kind: 'ramp', p: [0, 3], x0: 32, x1: 54 },
+    ],
+    shape: [
+      { x0: 6, x1: 22, knots: 3, minY: 2, maxY: 11, startY: 10, endY: 7, solution: [9.25, 8.5, 7.75] },
+    ],
+    shards: [
+      { x: 3, y: 10.50 },
+      { x: 10, y: 9.75 },
+      { x: 14, y: 9.00 },
+      { x: 18, y: 8.25 },
+      { x: 24, y: 7.50 },
+      { x: 36, y: 3.50 },
+      { x: 42, y: 3.50 },
+      { x: 48, y: 3.50 },
+    ],
+    canonical: { goalX: 52.5, coast: [], hops: [] },
+    portals: [{ a: 26, b: 32 }],
+  },
+  '5-5': {
+    id: '5-5', zone: 5, name: 'Two-Way Door', cardId: 'z5-2',
+    goal: 'Shape both sides of the door.', coach: 'Shape before and after.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 7], x0: 16, x1: 20 },
+      { kind: 'ramp', p: [0, 3], x0: 28, x1: 32 },
+      { kind: 'ramp', p: [0, 1], x0: 42, x1: 60 },
+    ],
+    shape: [
+      { x0: 5, x1: 16, knots: 2, minY: 3, maxY: 10, startY: 9, endY: 7, solution: [8.25, 7.75] },
+      { x0: 32, x1: 42, knots: 3, minY: 0, maxY: 5, startY: 3, endY: 1, solution: [2.5, 2, 1.5] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 8, y: 8.87 },
+      { x: 12, y: 8.30 },
+      { x: 18, y: 7.50 },
+      { x: 30, y: 3.50 },
+      { x: 36, y: 2.70 },
+      { x: 40, y: 1.90 },
+      { x: 46, y: 1.50 },
+      { x: 52, y: 1.50 },
+    ],
+    canonical: { goalX: 58.5, coast: [], hops: [] },
+    portals: [{ a: 20, b: 28 }],
+  },
+  '5-6': {
+    id: '5-6', zone: 5, name: 'The Climb', cardId: 'z5-2',
+    goal: 'Climb through the door with speed.', coach: 'Arrive very fast.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 2], x0: 24, x1: 28 },
+      { kind: 'ramp', p: [0, 5], x0: 36, x1: 40 },
+      { kind: 'ramp', p: [0, 1], x0: 46, x1: 62 },
+    ],
+    shape: [
+      { x0: 5, x1: 24, knots: 3, minY: 1, maxY: 10, startY: 9, endY: 2, solution: [7.25, 5.5, 3.75] },
+      { x0: 40, x1: 46, knots: 2, minY: 0, maxY: 7, startY: 5, endY: 1, solution: [3.75, 2.25] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 9, y: 8.03 },
+      { x: 14, y: 6.18 },
+      { x: 19, y: 4.34 },
+      { x: 26, y: 2.50 },
+      { x: 36, y: 5.50 },
+      { x: 38, y: 5.50 },
+      { x: 44, y: 2.75 },
+      { x: 52, y: 1.50 },
+    ],
+    canonical: { goalX: 60.5, coast: [], hops: [] },
+    portals: [{ a: 28, b: 36 }],
+  },
+  '5-7': {
+    id: '5-7', zone: 5, name: 'Exact Change', cardId: 'z5-2',
+    goal: 'Trade exactly through the door.', coach: 'Match the trade.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 5], x0: 22, x1: 26 },
+      { kind: 'ramp', p: [0, 8], x0: 34, x1: 38 },
+      { kind: 'ramp', p: [0, 1], x0: 46, x1: 62 },
+    ],
+    shape: [
+      { x0: 5, x1: 22, knots: 3, minY: 2, maxY: 11, startY: 10, endY: 5, solution: [8.75, 7.5, 6.25] },
+      { x0: 38, x1: 46, knots: 3, minY: 0, maxY: 9, startY: 8, endY: 1, solution: [6.25, 4.5, 2.75] },
+    ],
+    shards: [
+      { x: 2.5, y: 10.50 },
+      { x: 9, y: 9.32 },
+      { x: 13, y: 8.15 },
+      { x: 17, y: 6.97 },
+      { x: 24, y: 5.50 },
+      { x: 30, y: 7.75, air: true },
+      { x: 36, y: 8.50 },
+      { x: 42, y: 5.00 },
+      { x: 52, y: 1.50 },
+    ],
+    canonical: { goalX: 60.5, coast: [], hops: [] },
+    portals: [{ a: 26, b: 34 }],
+  },
+  '5-8': {
+    id: '5-8', zone: 5, name: 'Bank Before', cardId: 'z5-2',
+    goal: 'Shape speed before the door.', coach: 'Speed buys height.',
+    terrain: [
+      { kind: 'ramp', p: [0, 9], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 3], x0: 20, x1: 24 },
+      { kind: 'ramp', p: [0, -1], x0: 32, x1: 54 },
+    ],
+    shape: [
+      { x0: 5, x1: 20, knots: 3, minY: 1, maxY: 10, startY: 9, endY: 3, solution: [7.5, 6, 4.5] },
+      { x0: 32, x1: 46, knots: 3, minY: -4, maxY: 4, startY: -1, endY: -1, solution: [-1, -1, -1] },
+    ],
+    shards: [
+      { x: 2.5, y: 9.50 },
+      { x: 8, y: 8.30 },
+      { x: 12, y: 6.70 },
+      { x: 16, y: 5.10 },
+      { x: 22, y: 3.50 },
+      { x: 34, y: -0.50 },
+      { x: 40, y: -0.50 },
+      { x: 52, y: -0.50 },
+    ],
+    canonical: { goalX: 52.5, coast: [], hops: [] },
+    portals: [{ a: 24, b: 32 }],
+  },
+  '5-9': {
+    id: '5-9', zone: 5, name: 'The Final Door', cardId: 'z5-3', finale: true,
+    goal: 'Shape through the final door.', coach: 'Bank big, trade up.',
+    terrain: [
+      { kind: 'ramp', p: [0, 11], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 4], x0: 22, x1: 26 },
+      { kind: 'ramp', p: [0, 0], x0: 34, x1: 66 },
+    ],
+    shape: [
+      { x0: 5, x1: 22, knots: 4, minY: 1, maxY: 12, startY: 11, endY: 4, solution: [9.5, 8.25, 6.75, 5.5] },
+      { x0: 34, x1: 48, knots: 3, minY: -2, maxY: 5, startY: 0, endY: 0, solution: [0, 0, 0] },
+    ],
+    shards: [
+      { x: 2.5, y: 11.50 },
+      { x: 9, y: 9.77 },
+      { x: 13, y: 8.23 },
+      { x: 17, y: 6.59 },
+      { x: 21, y: 4.95 },
+      { x: 24, y: 4.50 },
+      { x: 36, y: 0.50 },
+      { x: 42, y: 0.50 },
+      { x: 54, y: 0.50 },
+    ],
+    canonical: { goalX: 64.5, coast: [], hops: [] },
+    portals: [{ a: 26, b: 34 }],
+  },
+  '6-1': {
+    id: '6-1', zone: 6, name: 'The Wind Rule', cardId: 'z6-1',
+    goal: 'Wind climbs the hill you draw.', coach: 'Write the wind.',
+    terrain: [
+      { kind: 'ramp', p: [0, 10.8], x0: 30, x1: 44 },
+    ],
+    shape: [
+      { x0: 8, x1: 30, knots: 4, minY: 2, maxY: 11.5, startY: 2, endY: 10.8, solution: [3.75, 5.5, 7.25, 9] },
+    ],
+    shards: [
+      { x: 12.4, y: 4.25 },
+      { x: 16.8, y: 6.00 },
+      { x: 21.2, y: 7.75 },
+      { x: 25.6, y: 9.50 },
+      { x: 34, y: 11.30 },
+      { x: 38, y: 11.30 },
+    ],
+    canonical: { goalX: 42.5, coast: [], hops: [] },
+    ruleSpec: { wind: { range: [0.5, 3], solvable: 2 } },
+    spawnX: 8,
+  },
+  '6-2': {
+    id: '6-2', zone: 6, name: 'Wind Hill', cardId: 'z6-1',
+    goal: 'Draw a hill the wind climbs.', coach: 'Wind beats the climb.',
+    terrain: [
+      { kind: 'ramp', p: [0, 1], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 12], x0: 32, x1: 50 },
+    ],
+    shape: [
+      { x0: 6, x1: 32, knots: 4, minY: 0, maxY: 14, startY: 1, endY: 12, solution: [3.25, 5.5, 7.5, 9.75] },
+    ],
+    shards: [
+      { x: 3, y: 1.50 },
+      { x: 12, y: 4.10 },
+      { x: 17, y: 6.24 },
+      { x: 22, y: 8.16 },
+      { x: 27, y: 10.34 },
+      { x: 36, y: 12.50 },
+      { x: 42, y: 12.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+    ruleSpec: { wind: { range: [1, 3], solvable: 2 } },
+  },
+  '6-3': {
+    id: '6-3', zone: 6, name: 'Wind Climb', cardId: 'z6-1',
+    goal: 'Shape a climb the wind pushes.', coach: 'Wind is constant.',
+    terrain: [
+      { kind: 'ramp', p: [0, 2], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 13], x0: 34, x1: 52 },
+    ],
+    shape: [
+      { x0: 6, x1: 34, knots: 4, minY: 1, maxY: 14, startY: 2, endY: 13, solution: [4.25, 6.5, 8.5, 10.75] },
+    ],
+    shards: [
+      { x: 3, y: 2.50 },
+      { x: 11, y: 4.51 },
+      { x: 16, y: 6.53 },
+      { x: 21, y: 8.35 },
+      { x: 26, y: 10.27 },
+      { x: 36, y: 13.50 },
+      { x: 42, y: 13.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [], hops: [] },
+    ruleSpec: { wind: { range: [1, 3], solvable: 2.5 } },
+  },
+  '6-4': {
+    id: '6-4', zone: 6, name: 'Wind Flat', cardId: 'z6-1',
+    goal: 'Wind pushes you up the line.', coach: 'Wind fights the hill.',
+    terrain: [
+      { kind: 'ramp', p: [0, 2], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 13.5], x0: 34, x1: 58 },
+    ],
+    shape: [
+      { x0: 6, x1: 34, knots: 4, minY: 0, maxY: 14, startY: 2, endY: 13.5, solution: [4.25, 6.5, 9, 11.25] },
+    ],
+    shards: [
+      { x: 3, y: 2.50 },
+      { x: 12, y: 4.91 },
+      { x: 17, y: 6.92 },
+      { x: 22, y: 9.15 },
+      { x: 27, y: 11.19 },
+      { x: 36, y: 14.00 },
+      { x: 44, y: 14.00 },
+    ],
+    canonical: { goalX: 56.5, coast: [], hops: [] },
+    ruleSpec: { wind: { range: [1, 3], solvable: 2.5 } },
+  },
+  '6-5': {
+    id: '6-5', zone: 6, name: 'The Spring', cardId: 'z6-2',
+    goal: 'Spring pulls you up the hill.', coach: 'Spring climbs the hill.',
+    terrain: [
+      { kind: 'ramp', p: [0, 1], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 13], x0: 30, x1: 48 },
+    ],
+    shape: [
+      { x0: 6, x1: 30, knots: 4, minY: 0, maxY: 14, startY: 1, endY: 13, solution: [3.5, 5.75, 8.25, 10.5] },
+    ],
+    shards: [
+      { x: 3, y: 1.50 },
+      { x: 10, y: 3.60 },
+      { x: 15, y: 5.96 },
+      { x: 20, y: 8.55 },
+      { x: 25, y: 10.90 },
+      { x: 34, y: 13.50 },
+      { x: 40, y: 13.50 },
+    ],
+    canonical: { goalX: 46.5, coast: [], hops: [] },
+    ruleSpec: { spring: { range: [0.5, 2], x0: 40, solvable: 1.5 } },
+  },
+  '6-6': {
+    id: '6-6', zone: 6, name: 'Spring Pull', cardId: 'z6-2',
+    goal: 'Spring pulls you up the bowl.', coach: 'Pull beats the slope.',
+    terrain: [
+      { kind: 'ramp', p: [0, 2], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0, 13], x0: 32, x1: 52 },
+    ],
+    shape: [
+      { x0: 6, x1: 32, knots: 4, minY: 0, maxY: 14, startY: 2, endY: 13, solution: [4.25, 6.5, 8.5, 10.75] },
+    ],
+    shards: [
+      { x: 3, y: 2.50 },
+      { x: 10, y: 4.23 },
+      { x: 15, y: 6.41 },
+      { x: 20, y: 8.37 },
+      { x: 25, y: 10.46 },
+      { x: 36, y: 13.50 },
+      { x: 44, y: 13.50 },
+    ],
+    canonical: { goalX: 50.5, coast: [], hops: [] },
+    ruleSpec: { spring: { range: [0.5, 2], x0: 45, solvable: 1.5 } },
+  },
+  '6-7': {
+    id: '6-7', zone: 6, name: 'Wind Gap', cardId: 'z6-2',
+    goal: 'Wind carries you over the gap.', coach: 'Climb, then leap.',
+    terrain: [
+      { kind: 'ramp', p: [0, 1], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0.75, -12], x0: 28, x1: 32 },
+      { kind: 'ramp', p: [0, 7], x0: 44, x1: 58 },
+    ],
+    shape: [
+      { x0: 6, x1: 28, knots: 4, minY: 0, maxY: 14, startY: 1, endY: 9, solution: [2.5, 4.25, 5.75, 7.5] },
+    ],
+    shards: [
+      { x: 3, y: 1.50 },
+      { x: 11, y: 3.23 },
+      { x: 16, y: 5.17 },
+      { x: 21, y: 6.96 },
+      { x: 26, y: 8.83 },
+      { x: 30, y: 11.00 },
+      { x: 38, y: 9.00, air: true },
+      { x: 48, y: 7.50 },
+    ],
+    canonical: { goalX: 56.5, coast: [[32, 44]], hops: [] },
+    ruleSpec: { wind: { range: [1, 3], solvable: 2 } },
+  },
+  '6-8': {
+    id: '6-8', zone: 6, name: 'Spring Bowl', cardId: 'z6-2',
+    goal: 'Spring pushes you up the bowl.', coach: 'Spring fills the bowl.',
+    terrain: [
+      { kind: 'ramp', p: [0, 2], x0: 0, x1: 5 },
+      { kind: 'ramp', p: [0, 12], x0: 30, x1: 50 },
+    ],
+    shape: [
+      { x0: 5, x1: 30, knots: 4, minY: 0, maxY: 14, startY: 2, endY: 12, solution: [4, 6, 8, 10] },
+    ],
+    shards: [
+      { x: 2.5, y: 2.50 },
+      { x: 10, y: 4.50 },
+      { x: 15, y: 6.50 },
+      { x: 20, y: 8.50 },
+      { x: 25, y: 10.50 },
+      { x: 34, y: 12.50 },
+      { x: 40, y: 12.50 },
+    ],
+    canonical: { goalX: 48.5, coast: [], hops: [] },
+    ruleSpec: { spring: { range: [0.5, 2], x0: 35, solvable: 1.5 } },
+  },
+  '6-9': {
+    id: '6-9', zone: 6, name: 'The Perfect Rule', cardId: 'z6-3', finale: true,
+    goal: 'Shape for wind and spring.', coach: 'Climb hard, leap far.',
+    terrain: [
+      { kind: 'ramp', p: [0, 1], x0: 0, x1: 6 },
+      { kind: 'ramp', p: [0.75, -9], x0: 24, x1: 28 },
+      { kind: 'ramp', p: [0, 7], x0: 44, x1: 66 },
+    ],
+    shape: [
+      { x0: 6, x1: 24, knots: 5, minY: 0, maxY: 14, startY: 1, endY: 9, solution: [2.25, 3.75, 5, 6.25, 7.75] },
+    ],
+    shards: [
+      { x: 3, y: 1.50 },
+      { x: 10, y: 3.24 },
+      { x: 14, y: 5.09 },
+      { x: 18, y: 6.75 },
+      { x: 22, y: 8.69 },
+      { x: 26, y: 11.00 },
+      { x: 34, y: 9.00, air: true },
+      { x: 52, y: 7.50 },
+      { x: 58, y: 7.50 },
+    ],
+    canonical: { goalX: 64.5, coast: [[28, 44]], hops: [] },
+    ruleSpec: { wind: { range: [1.5, 3], solvable: 2.5 } },
+  },
 }
+
 /** the solvable rule for a level as a MotionRule (defaults = solvable witness) */
 export function solvableRule(lvl: SRLevel): MotionRule | undefined {
   if (!lvl.ruleSpec) return undefined
@@ -146,7 +1309,7 @@ export const BOSS: BossDef = {
   rewindSetback: 6,
   ridges: [
     {
-      name: 'Carve',
+      name: 'The Perfect Rule',
       coach: 'Stay low, stay fast.',
       terrain: [
         { kind: 'sine', p: [2, 0.3, 3.1415926536, 5], x0: 0, x1: 30 },
@@ -161,7 +1324,7 @@ export const BOSS: BossDef = {
       canonical: { goalX: 48.5, coast: [], hops: [] },
     },
     {
-      name: 'Portals',
+      name: 'The Perfect Rule',
       coach: 'Bank height before doors.',
       terrain: [
         { kind: 'ramp', p: [-0.2, 8], x0: 0, x1: 15 },
@@ -176,7 +1339,7 @@ export const BOSS: BossDef = {
       canonical: { goalX: 56.5, coast: [], hops: [] },
     },
     {
-      name: 'Spring Rule',
+      name: 'The Perfect Rule',
       coach: 'Let the spring pull.',
       terrain: [
         { kind: 'sine', p: [1.5, 0.25, 0, 5], x0: 0, x1: 40 },
@@ -214,6 +1377,8 @@ export interface ResultPayload {
   coachLine?: string
   xpBefore: number
   xpAfter: number
+  /** the exact curve the player cleared with (design v3 §8 "your line") */
+  lineSegs?: Seg[]
 }
 
 const RESULT_KEY = 'slope-rider-result-v1'

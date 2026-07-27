@@ -1,55 +1,65 @@
-# Gameplay screen contract (pinned decisions — build agents read this)
+# Gameplay screen contract v3 (pinned decisions — build agents read this)
 
 ## Anatomy
 
-- One `RideSession` (kit Session subclass) drives the whole runner; no dock,
-  no tray, no GO button (`go()` is a no-op stub for the abstract surface).
-- HUD row: back IconButton, pause IconButton, StarMeter (discrete,
-  stars-earned-so-far), SlopeChip slot. AreaBar rides the bottom edge above
-  the safe-area, full width.
-- Intro card scrim: level name, goal, coach (≤ 6 words); the run starts on
-  the first carve input (not on a button).
-- Pause sheet per kit pattern. Mid-level persist via sessionStorage
-  (position, velocity, collected shards, chosen rule; boss: current ridge).
+- One `ShapeRideSession` (kit Session subclass) drives both modes on one
+  canvas, one Engine. Phase machine: `shape | ride | freeze`.
+- HUD row (both modes): back IconButton, StarMeter (stars-earned-so-far),
+  pause IconButton.
+- **SHAPE mode HUD:** per-window INK chips (top-left, only budgeted
+  windows), Ride NeonButton (bottom-center, 56px), Z6 rule pencil
+  (top-right). Intro card scrim (name, goal, coach ≤ 6 words, "Drag the
+  knots. Tap Ride.") dismisses on tap.
+- **RIDE mode HUD:** SlopeChip (top-left), AreaBar (bottom edge),
+  edit-line pencil (top-right), Z6 rule pencil below it.
+- Pause sheet: Resume / Edit line (ride only) / Ghost hint / Restart /
+  Settings / Quit to map. Mid-level persist: knot y's, attempts, rule,
+  ghostDismissed (phase always resumes to SHAPE).
 
-## Input zones (canon-pinned)
+## Input (canon-pinned)
 
-- **Carve zone:** top 75% of canvas — hold to carve (default) or tap to
-  toggle (`carveInput: 'hold' | 'toggle'` in Settings, default hold).
-- **Hop zone:** bottom 25% of canvas (≥ 120px) — tap while grounded = hop.
-- Translucent touch dot at the contact point; rider anchored at 40% screen
-  height from top (thumb never covers the rider or landing zone).
-- pointercancel = release (same as lift). No drag gestures anywhere.
+- **SHAPE:** press within 44px of a knot → vertical drag; knots snap to
+  0.25u with haptic+sfx tick per quantum; release inside budget = line
+  chime, over budget = soft buzz + INK chip goes coral. Nothing else
+  intercepts the finger.
+- **RIDE:** carve zone top 75% (hold, or toggle per Settings), hop zone
+  bottom 25% tap. pointercancel = release. Ride starts with auto-carve
+  until the player's first touch ends it.
+- Long-press must never summon OS selection (global no-select + canvas
+  touch-action none + contextmenu suppressed — see AGENTS.md).
 
 ## Camera
 
-- `contentBounds()` returns ONLY the spawn viewport for Session.begin()'s
-  fitWorld (`x₀−4 … x₀+12`, `y₀−3 … y₀+7`). NEVER call fitWorld/frameContent
-  after begin. Follow cam: game-side per-frame `cam.cx/cam.cy` easing per
-  design §5.2 (lookahead + 40% anchor).
+- SHAPE: `frameContent()` fits the WHOLE level (bedrock + windows + goal)
+  with 1.5u pad; engine fitWorld minScale lowered to 6 for this (kit
+  default 26 preserved for chase/VECTO-era callers).
+- RIDE: v2 chase cam (lookahead + ease), entered by tween from the shape
+  fit — the zoom-in IS the mode transition.
+- Freeze: camera holds during the 900ms freeze, tweens back to the
+  whole-level fit for TUNE.
 
-## Chips (stealth bridge)
+## Rendering
 
-- **SlopeChip:** two rows — big speed |v|, small slope f′(x) with tilting
-  hill glyph. mathLabels swaps glyph → `f′(x)=…`. Tap → Nerd Note
-  BottomSheet (zone card). No long-press. Slope and speed are never merged
-  into one number.
-- **AreaBar:** glow gauge filling A(x) = F(x) − F(x_start) (closed form);
-  pulses at 70% / 100% (star thresholds). Shard chime pitch rises with A.
-- **Pencil chip (Z6 only):** opens the rule editor mid-run (pauses physics);
-  steppers 44px, 0.1 steps; defaults pre-set to a solvable rule; pre-run
-  sheet skippable.
+- Bedrock: zone-accent glow line. Player line: per-sample derivative tint
+  (mint flat → cyan/violet downhill → amber/red uphill; uphill ALSO dashed —
+  sign is never color-only).
+- SHAPE extras: anchor diamonds, clamp-band dashes (coral when over
+  budget), knot beads + 44px affordance rings, drag guide rail, ghost
+  solution (dashed + pulsing knot rings) when ghostVisible.
+- Freeze marker: pulsing amber ring + ≤5-word reason label ("stalled —
+  steeper before this", "the gate is here", "faster for the door", "too
+  much sky — soften it").
+- Perf caps unchanged: ≤ 64 samples per terrain piece per frame,
+  ≤ 40 speed lines.
 
 ## Ghost hint
 
-- Game-side ghost-rider replay (NOT kit hintPath): canonical line sampled at
-  120 Hz (`{x, y, ẋ, ẏ, carving}[]`), translucent rider, plays after 3
-  failed attempts or 30s idle. hintPath() returns null.
+- Solution knots rendered as the ghost line (NOT kit hintPath, NOT a ghost
+  rider). Auto-shows entering SHAPE with attempts ≥ 3 (ghostHints setting,
+  dismissable), always available from pause.
 
 ## Physics render
 
-- Fixed 120 Hz accumulator on kit rAF; render alpha-interpolates previous ↔
-  current state (game-side). 60 Hz physics fallback when
-  `navigator.hardwareConcurrency ≤ 4` (identical outcomes).
-- Perf caps: ≤ 200 terrain samples per visible span, ≤ 40 speed lines,
-  avalanche = scrolling texture (no particles).
+- Unchanged from v2: fixed 120 Hz accumulator, alpha interpolation, 60 Hz
+  fallback at hardwareConcurrency ≤ 4, CCD landing, portal E-conservation
+  asserted by the harness.

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Map as MapIcon, Minus, Pause, Pencil, Play, Plus, RefreshCw, Settings as SettingsIcon, Zap } from 'lucide-react'
-import { bindKitSettings } from '@gridverse/kit/lib'
-import { IconButton, NeonButton, StarMeter, Toast, Chip, BottomSheet } from '@gridverse/kit/ui'
-import type { UiState } from '@gridverse/kit/session'
+import { Map as MapIcon, Minus, Pause, Pencil, Play, Plus, RefreshCw, Settings as SettingsIcon, Sparkles } from 'lucide-react'
+import { bindKitSettings } from '@/kit/lib'
+import { IconButton, NeonButton, StarMeter, Toast, Chip, BottomSheet } from '@/kit/ui'
+import type { UiState } from '@/kit/session'
 import { useGameStore, chapterName } from '../store.ts'
 import { LEVELS, loadMidLevel, saveMidLevel, clearMidLevel, saveResult, starsForLight, type SRLevel, type MotionRule, type ResultPayload } from '../game/levels.ts'
-import { RideSession } from '../game/ride/rideSession.ts'
-import type { RideExtras } from '../game/ride/rideSession.ts'
+import { ShapeRideSession } from '../game/ride/shapeRideSession.ts'
+import type { ShapeRideExtras } from '../game/ride/shapeRideSession.ts'
 import { ruleTick } from '../game/sfx.ts'
 import SlopeChip from '../components/SlopeChip.tsx'
 import AreaBar from '../components/AreaBar.tsx'
@@ -53,8 +53,8 @@ export default function Gameplay() {
 function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boolean }) {
   const navigate = useNavigate()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const sessionRef = useRef<RideSession | null>(null)
-  const [ui, setUi] = useState<UiState<RideExtras> | null>(null)
+  const sessionRef = useRef<ShapeRideSession | null>(null)
+  const [ui, setUi] = useState<UiState<ShapeRideExtras> | null>(null)
   const [intro, setIntro] = useState(true)
   const [paused, setPaused] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -108,6 +108,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
         nextLevelId: next ?? null,
         xpBefore,
         xpAfter: xpBefore + xpEarned,
+        lineSegs: sessionRef.current?.terrainSegs.map((s) => ({ ...s, p: [...s.p] })),
       }
       saveResult(payload)
       navigate('/results')
@@ -120,8 +121,8 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const session = new RideSession(canvas, level, {
-      onUi: (u) => setUi(u as UiState<RideExtras>),
+    const session = new ShapeRideSession(canvas, level, {
+      onUi: (u) => setUi(u as UiState<ShapeRideExtras>),
       onToast: (msg) => setToast(msg),
       onWin: () => winRef.current(0, 0),
     })
@@ -144,12 +145,6 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
     }
   }, [level.id, level, wantResume])
 
-  useEffect(() => {
-    if (ui && ui.speed > 0.1 && intro) {
-      setIntro(false)
-    }
-  }, [ui, intro])
-
   const setPause = (p: boolean) => {
     setPaused(p)
     sessionRef.current?.setPaused(p)
@@ -167,6 +162,8 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
 
   const tone = (ZONE_TONE[level.zone as keyof typeof ZONE_TONE] ?? 'mint') as Tone
   const starPreview = starsForLight(true, ui?.lightGot ?? 0, level.shards.length)
+  const phase = ui?.phase ?? 'shape'
+  const shaping = phase === 'shape'
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden bg-night-1">
@@ -197,18 +194,69 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
           className={`pointer-events-none absolute inset-0 z-[5] bg-night-0/40 backdrop-blur-[4px] transition-opacity duration-200 ${paused || intro ? 'opacity-100' : 'opacity-0'}`}
         />
 
-        {/* Slope chip */}
-        <div className="absolute left-3 top-3 z-10">
-          <SlopeChip
-            speed={ui?.speed ?? 0}
-            slope={ui?.slope ?? 0}
-            zone={level.zone}
-            levelId={level.id}
-            mathLabels={settings.mathLabels}
-          />
-        </div>
+        {/* ride-phase HUD: slope chip + area bar */}
+        {!shaping && (
+          <>
+            <div className="absolute left-3 top-3 z-10">
+              <SlopeChip
+                speed={ui?.speed ?? 0}
+                slope={ui?.slope ?? 0}
+                zone={level.zone}
+                levelId={level.id}
+                mathLabels={settings.mathLabels}
+              />
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 z-10">
+              <AreaBar area={ui?.area ?? 0} total={ui?.areaTotal ?? 1} />
+            </div>
+          </>
+        )}
 
-        {/* Z6 rule pencil */}
+        {/* shape-phase HUD: ink meters + Ride button */}
+        {shaping && !intro && (
+          <>
+            {(ui?.ink ?? []).some((m) => m.budget !== undefined) && (
+              <div className="absolute left-3 top-3 z-10 flex flex-col gap-1">
+                {(ui?.ink ?? []).map((m, i) =>
+                  m.budget === undefined ? null : (
+                    <div
+                      key={i}
+                      className={`rounded-lg border px-2 py-1 font-mono text-caption font-bold backdrop-blur-sm ${
+                        m.used > m.budget
+                          ? 'border-coral/60 bg-night-2/90 text-coral'
+                          : 'border-line bg-night-2/90 text-mid'
+                      }`}
+                    >
+                      INK {m.used.toFixed(1)} / {m.budget.toFixed(0)}
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
+            <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2">
+              <NeonButton
+                onClick={() => sessionRef.current?.startRide()}
+                ariaLabel="Ride the line"
+              >
+                <Play size={18} /> Ride
+              </NeonButton>
+            </div>
+          </>
+        )}
+
+        {/* ride-phase: back-to-shape pencil */}
+        {!shaping && (
+          <button
+            type="button"
+            aria-label="Edit line"
+            onClick={() => sessionRef.current?.backToShape()}
+            className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-night-2/90 shadow-panel backdrop-blur-sm active:scale-[0.98]"
+          >
+            <Pencil size={16} className="text-mid" />
+          </button>
+        )}
+
+        {/* Z6 rule pencil (below edit-line button / top-right in shape) */}
         {ui?.showRuleChip && (
           <button
             type="button"
@@ -216,34 +264,12 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
               setRuleOpen(true)
               sessionRef.current?.setPaused(true)
             }}
-            className="absolute right-3 top-3 z-10 flex h-10 items-center gap-1 rounded-lg border border-line bg-night-2/90 px-2 shadow-panel backdrop-blur-sm active:scale-[0.98]"
+            className={`absolute right-3 z-10 flex h-10 items-center gap-1 rounded-lg border border-line bg-night-2/90 px-2 shadow-panel backdrop-blur-sm active:scale-[0.98] ${shaping ? 'top-3' : 'top-16'}`}
           >
             <Pencil size={14} className="text-mid" />
             <span className="text-caption font-extrabold uppercase text-mid">Rule</span>
           </button>
         )}
-
-        {/* Nudge chip */}
-        <AnimatePresence>
-          {ui?.nudgePrompt && (
-            <motion.button
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              type="button"
-              onClick={() => sessionRef.current?.nudge()}
-              className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2 flex items-center gap-2 rounded-full border border-line bg-night-2/95 px-4 py-2 shadow-panel active:scale-[0.98]"
-            >
-              <Zap size={16} className="text-amber" />
-              <span className="text-body font-extrabold text-hi">Nudge</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Area bar */}
-        <div className="absolute bottom-0 left-0 right-0 z-10">
-          <AreaBar area={ui?.area ?? 0} total={ui?.areaTotal ?? 1} />
-        </div>
       </div>
 
       {/* Intro scrim */}
@@ -255,7 +281,8 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="scrim pointer-events-none fixed inset-0 z-40 flex items-center justify-center px-6 backdrop-blur-[8px]"
+            className="scrim fixed inset-0 z-40 flex items-center justify-center px-6 backdrop-blur-[8px]"
+            onClick={() => setIntro(false)}
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
@@ -277,7 +304,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
               <h2 className="text-h2 font-black text-hi">{level.name}</h2>
               <p className="text-body font-semibold text-mid">{level.goal}</p>
               <p className="text-caption font-extrabold uppercase text-amber">{level.coach}</p>
-              <p className="text-caption font-extrabold uppercase text-low">Hold top of screen to start</p>
+              <p className="text-caption font-extrabold uppercase text-low">Drag the knots. Tap Ride.</p>
             </motion.div>
           </motion.div>
         )}
@@ -309,6 +336,26 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
               <h2 className="mb-1 text-center text-h2 font-black text-hi">Paused</h2>
               <NeonButton onClick={() => setPause(false)}>
                 <Play size={18} /> Resume
+              </NeonButton>
+              {!shaping && (
+                <NeonButton
+                  variant="secondary"
+                  onClick={() => {
+                    sessionRef.current?.backToShape()
+                    setPause(false)
+                  }}
+                >
+                  <Pencil size={18} /> Edit line
+                </NeonButton>
+              )}
+              <NeonButton
+                variant="secondary"
+                onClick={() => {
+                  sessionRef.current?.showGhost()
+                  setPause(false)
+                }}
+              >
+                <Sparkles size={18} /> Ghost hint
               </NeonButton>
               <NeonButton
                 variant="secondary"

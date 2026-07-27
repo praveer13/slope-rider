@@ -1,5 +1,5 @@
-import type { Vec } from '@gridverse/kit/engine'
-import type { Engine } from '@gridverse/kit/engine'
+import type { Vec } from '@/kit/engine'
+import type { Engine } from '@/kit/engine'
 import type { Seg, Shard, GhostFrame } from '../calculus'
 import { segF, terrainF } from '../calculus'
 
