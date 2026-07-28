@@ -54,7 +54,7 @@ export function BottomSheet({
                 onClose();
               }
             }}
-            className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 rounded-t-[20px] border border-line bg-night-2 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-panel"
+            className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] rounded-t-[20px] border border-line bg-night-2 pb-[calc(env(safe-area-inset-bottom)+16px)] shadow-panel"
           >
             <div className="mx-auto mt-2 h-1 w-8 rounded-pill bg-line" />
             <div className="px-4 pt-3">{children}</div>
