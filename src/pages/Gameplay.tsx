@@ -12,6 +12,7 @@ import type { ShapeRideExtras } from '../game/ride/shapeRideSession.ts'
 import { ruleTick } from '../game/sfx.ts'
 import SlopeChip from '../components/SlopeChip.tsx'
 import AreaBar from '../components/AreaBar.tsx'
+import OnboardCoach, { coachSeen, markCoachSeen } from '../components/OnboardCoach.tsx'
 
 bindKitSettings(() => useGameStore.getState().settings)
 
@@ -36,6 +37,11 @@ const ZONE_TONE = {
 } as const
 type Tone = (typeof ZONE_TONE)[keyof typeof ZONE_TONE]
 
+const SHAPE_STEPS = [
+  { text: 'Drag knots to shape it.', selector: '[data-coach="canvas"]' },
+  { text: 'Tap Ride when ready.', selector: '[data-coach="ride"]' },
+]
+
 export default function Gameplay() {
   const [params] = useSearchParams()
   const wantResume = params.get('resume') === '1'
@@ -59,6 +65,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
   const [paused, setPaused] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [ruleOpen, setRuleOpen] = useState(false)
+  const [coachDone, setCoachDone] = useState(() => coachSeen())
   const settings = useGameStore((s) => s.settings)
 
   const handleWin = useCallback(
@@ -187,6 +194,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
       <div className="relative min-h-0 flex-1">
         <canvas
           ref={canvasRef}
+          data-coach="canvas"
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}
         />
         <div
@@ -233,7 +241,7 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
                 )}
               </div>
             )}
-            <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2">
+            <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2" data-coach="ride">
               <NeonButton
                 onClick={() => sessionRef.current?.startRide()}
                 ariaLabel="Ride the line"
@@ -392,6 +400,17 @@ function GameplayBody({ level, wantResume }: { level: SRLevel; wantResume: boole
       )}
 
       <Toast message={toast} onDone={() => setToast(null)} />
+
+      {/* first-run ghost coach: the SHAPE loop, zone 1 only */}
+      {!coachDone && shaping && !intro && level.zone === 1 && (
+        <OnboardCoach
+          steps={SHAPE_STEPS}
+          onDone={() => {
+            markCoachSeen()
+            setCoachDone(true)
+          }}
+        />
+      )}
     </div>
   )
 }
